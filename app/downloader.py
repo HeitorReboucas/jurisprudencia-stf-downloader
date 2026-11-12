@@ -38,6 +38,12 @@ class PDFDownloader:
                     headers={"User-Agent": "STF-Jurisprudencias-Coletor/1.0"},
                 ) as response:
                     response.raise_for_status()
+                    if response.headers.get("x-amzn-waf-action"):
+                        raise DownloadError(
+                            "O STF exigiu uma verificação anti-robô para este arquivo, e o "
+                            "programa não contorna essa proteção. Baixe o PDF manualmente "
+                            "pelo portal do STF."
+                        )
                     content_type = response.headers.get("content-type", "").lower()
                     if "pdf" not in content_type and "octet-stream" not in content_type:
                         raise DownloadError(

@@ -249,3 +249,19 @@ def test_uploaded_document_goes_to_each_new_drive_folder(tmp_path) -> None:
     assert database.job_counts("job-b")["uploaded"] == 1
     assert database.job_counts("job-local")["uploaded"] == 0
     assert database.job_counts("job-local")["downloaded"] == 1
+
+
+def test_download_error_is_written_to_the_job_log(tmp_path) -> None:
+    collector, database = make_collector(tmp_path)
+    make_job(database, "job-log")
+    collector.stf = FakeSTF({0: [make_document("6")]})
+
+    class BlockedDownloader:
+        def download(self, *_: object) -> tuple[str, int]:
+            raise RuntimeError("verificação anti-robô")
+
+    collector.downloader = BlockedDownloader()
+    collector.run("job-log")
+
+    messages = [event["message"] for event in database.list_events("job-log")]
+    assert any("RE 6" in message and "anti-robô" in message for message in messages)

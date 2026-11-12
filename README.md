@@ -183,6 +183,9 @@ Se o registro disser que os filtros de data e classe não puderam ser aplicados,
 
 Nem todo resultado tem um arquivo de inteiro teor disponível para download. O coletor registra esse caso e continua com os outros documentos. Abra o registro da execução para ver a mensagem específica.
 
+- **Súmulas e informativos:** o portal normalmente não informa um PDF de inteiro teor para esses tipos, então eles costumam aparecer como erro com a mensagem "sem URL de inteiro teor".
+- **Verificação anti-robô:** o servidor de documentos do STF pode exigir uma verificação anti-robô antes de liberar o PDF, o que acontece com frequência nos acórdãos. O programa não contorna essa proteção; o registro indica o documento, que pode ser baixado manualmente pelo portal.
+
 ### O Google Drive não conecta ou o upload falha
 
 O download local funciona sem o Drive. Para enviar arquivos, confirme as credenciais, a autorização no navegador e a pasta selecionada. Se o envio falhar, o PDF permanece no computador e pode ser reenviado depois.

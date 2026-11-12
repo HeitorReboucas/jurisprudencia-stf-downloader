@@ -61,3 +61,17 @@ def test_downloader_retries_rate_limited_response(tmp_path) -> None:
         )
 
     assert stream.call_count == 2
+
+
+def test_downloader_reports_anti_bot_challenge_without_retrying(tmp_path) -> None:
+    response = MagicMock()
+    response.headers = {"x-amzn-waf-action": "challenge", "content-type": "text/html"}
+
+    with patch("app.downloader.httpx.stream") as stream:
+        stream.return_value.__enter__.return_value = response
+        with pytest.raises(DownloadError, match="anti-robô"):
+            PDFDownloader(max_attempts=3).download(
+                "https://portal.stf.jus.br/documento.pdf", tmp_path / "document.pdf"
+            )
+
+    assert stream.call_count == 1

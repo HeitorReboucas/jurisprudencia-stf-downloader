@@ -228,6 +228,7 @@ class Collector:
             record["id"], status="error", error=message[:2000]
         )
         self.database.update_job_document_status(job_id, record["id"], "error_download")
+        self.database.add_event(job_id, "warning", f"PDF não baixado ({record['title']}): {message}")
 
     def upload_document(self, document_id: int, folder_id: str) -> dict[str, Any]:
         record = self.database.get_document(document_id)

@@ -11,6 +11,13 @@ CONTENT_BASES = {
     "sumulas": "sumulas",
     "informativos": "informativos",
 }
+# The "base" the portal writes in each result; searching base=informativos returns "novo_informativo".
+RESULT_BASES = {
+    "acordaos": {"acordaos"},
+    "decisoes_monocraticas": {"decisoes"},
+    "sumulas": {"sumulas"},
+    "informativos": {"informativos", "novo_informativo"},
+}
 
 
 class STFTemporaryUnavailable(RuntimeError):
@@ -35,6 +42,10 @@ def normalize_document(source: dict[str, Any], content_type: str) -> STFDocument
         raise ValueError("Documento do STF sem identificador estável")
 
     document_number = source.get("processo_codigo_completo") or source.get("titulo")
+    pdf_url = source.get("inteiro_teor_url")
+    # The portal sends some links (e.g. monocratic decisions) as http; the same file is served over https.
+    if pdf_url and pdf_url.startswith("http://"):
+        pdf_url = "https://" + pdf_url.removeprefix("http://")
     return STFDocument(
         document_key=f"{source.get('base', content_type)}:{document_id}",
         title=str(source.get("titulo") or document_number or document_id),
@@ -51,5 +62,5 @@ def normalize_document(source: dict[str, Any], content_type: str) -> STFDocument
                 }
             )
         ),
-        pdf_url=source.get("inteiro_teor_url"),
+        pdf_url=pdf_url,
     )

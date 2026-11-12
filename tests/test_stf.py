@@ -104,3 +104,17 @@ def test_normalize_document_maps_hit() -> None:
 def test_browser_rejects_request_delay_below_portal_rate_limit() -> None:
     with pytest.raises(ValueError, match="1 segundo"):
         STFPortalBrowser(request_delay_seconds=0.5)
+
+
+def test_normalize_document_upgrades_http_pdf_link_to_https() -> None:
+    document = normalize_document(
+        {
+            "base": "decisoes",
+            "id": "despacho1",
+            "inteiro_teor_url": "http://portal.stf.jus.br/processos/downloadPeca.asp?id=1&ext=.pdf",
+        },
+        "decisoes_monocraticas",
+    )
+
+    assert document.pdf_url == "https://portal.stf.jus.br/processos/downloadPeca.asp?id=1&ext=.pdf"
+    STFPortalBrowser._validate_pdf_url(document.pdf_url, 0)

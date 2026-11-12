@@ -19,7 +19,13 @@ from playwright.sync_api import (
     sync_playwright,
 )
 
-from app.stf import CONTENT_BASES, STFDocument, STFTemporaryUnavailable, normalize_document
+from app.stf import (
+    CONTENT_BASES,
+    RESULT_BASES,
+    STFDocument,
+    STFTemporaryUnavailable,
+    normalize_document,
+)
 
 
 STF_SEARCH_PAGE = "https://jurisprudencia.stf.jus.br/pages/search"
@@ -126,8 +132,7 @@ class STFPortalBrowser:
                     raise STFResponseValidationError(
                         f"Resultado {index + 1} pertence a uma base inesperada."
                     )
-                expected_base = CONTENT_BASES[content_type]
-                if source.get("base") != expected_base:
+                if source.get("base") not in RESULT_BASES[content_type]:
                     raise STFResponseValidationError(
                         f"Resultado {index + 1} veio de uma base inesperada do STF."
                     )
