@@ -53,6 +53,9 @@ class FakeSTF:
         self.arguments.append(_)
         return self.pages.get(page, [])
 
+    def close(self) -> None:
+        pass
+
 
 class FakeDownloader:
     def __init__(self, content: bytes = b"%PDF-1.7\n%%EOF") -> None:
@@ -102,6 +105,9 @@ def test_collector_can_resume_after_stf_failure(tmp_path) -> None:
                 self.should_fail = False
                 raise RuntimeError("STF temporariamente indisponível")
             return FakeSTF({0: [make_document("3")]}).search_page(**kwargs)
+
+        def close(self) -> None:
+            pass
 
     collector.stf = FailingOnceSTF()
     collector.downloader = FakeDownloader()
@@ -210,3 +216,36 @@ def test_drive_failure_keeps_local_pdf_and_marks_job_error(tmp_path) -> None:
     assert uploaded_document["status"] == "uploaded"
     assert uploaded_document["drive_file_id"] == "drive-file-1"
     assert Path(uploaded_document["local_path"]).is_file()
+
+def test_uploaded_document_goes_to_each_new_drive_folder(tmp_path) -> None:
+    collector, database = make_collector(tmp_path)
+    collector.downloader = FakeDownloader()
+
+    class RecordingDrive:
+        def __init__(self) -> None:
+            self.uploads: list[str] = []
+
+        def is_authorized(self) -> bool:
+            return True
+
+        def ensure_archive_folder(self, root_folder_id: str, *_: object) -> str:
+            return root_folder_id
+
+        def upload_pdf(self, _: Path, folder_id: str, __: str) -> str:
+            self.uploads.append(folder_id)
+            return f"file-in-{folder_id}"
+
+    drive = RecordingDrive()
+    collector.drive = drive
+    for job_id, folder in (("job-a", "folder-a"), ("job-b", "folder-b"), ("job-local", None)):
+        database.create_job(
+            job_id,
+            {"content_types": ["acordaos"], "query": "liberdade", "drive_folder_id": folder},
+        )
+        collector.stf = FakeSTF({0: [make_document("5")]})
+        collector.run(job_id)
+
+    assert drive.uploads == ["folder-a", "folder-b"]
+    assert database.job_counts("job-b")["uploaded"] == 1
+    assert database.job_counts("job-local")["uploaded"] == 0
+    assert database.job_counts("job-local")["downloaded"] == 1

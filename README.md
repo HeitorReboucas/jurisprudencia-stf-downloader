@@ -92,7 +92,7 @@ Na página que abrir no navegador:
 6. Para guardar os PDFs somente neste computador, mantenha **Não enviar ao Drive** selecionado.
 7. Clique em **Iniciar coleta** e acompanhe o andamento na seção **Execução**.
 
-Sem datas, é necessário informar palavras-chave. Isso evita pedir ao programa para baixar todo o conteúdo disponível sem nenhum filtro. Uma consulta sem data pode encontrar muitos documentos e levar mais tempo.
+As palavras-chave são obrigatórias: a pesquisa oficial do STF só é iniciada a partir delas. As datas e a classe processual apenas restringem os resultados. Uma consulta sem data pode encontrar muitos documentos e levar mais tempo.
 
 Por padrão, o portal procura documentos que correspondam a todos os termos digitados. O programa envia a expressão ao mecanismo de pesquisa oficial do STF; portanto, os operadores e as aspas seguem as regras desse portal.
 
@@ -220,7 +220,7 @@ Para iniciar uma coleta por API, envie uma requisição `POST /api/jobs`. Este e
 }
 ```
 
-As datas `date_from` e `date_to` são opcionais. Se ambas forem omitidas, `query` precisa conter palavras-chave. Valores possíveis para `content_types`: `acordaos`, `decisoes_monocraticas`, `sumulas` e `informativos`.
+O campo `query` é obrigatório. As datas `date_from` e `date_to` são opcionais. Valores possíveis para `content_types`: `acordaos`, `decisoes_monocraticas`, `sumulas` e `informativos`.
 
 Principais endereços da API:
 

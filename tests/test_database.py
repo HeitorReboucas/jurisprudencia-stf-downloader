@@ -61,3 +61,33 @@ def test_running_jobs_are_marked_interrupted_on_startup(tmp_path) -> None:
 
     assert database.interrupt_running_jobs() == ["job-2"]
     assert database.get_job("job-2")["status"] == "interrupted"
+
+def test_queued_jobs_are_marked_interrupted_on_startup(tmp_path) -> None:
+    database = Database(tmp_path / "state.sqlite3")
+    database.initialize()
+    database.create_job("job-waiting", {"content_types": ["acordaos"]})
+
+    assert database.interrupt_running_jobs() == ["job-waiting"]
+    assert database.get_job("job-waiting")["status"] == "interrupted"
+
+
+def test_hash_lookup_ignores_duplicate_rows(tmp_path) -> None:
+    database = Database(tmp_path / "state.sqlite3")
+    database.initialize()
+    rows = []
+    for key in ("acordaos:dup", "acordaos:original"):
+        rows.append(
+            database.insert_document(
+                {
+                    "document_key": key,
+                    "title": key,
+                    "content_type": "acordaos",
+                    "source_url": "https://jurisprudencia.stf.jus.br/",
+                    "status": "pending",
+                }
+            )
+        )
+    database.update_document(rows[0]["id"], status="duplicate", hash_sha256="same")
+    database.update_document(rows[1]["id"], status="uploaded", hash_sha256="same")
+
+    assert database.find_document_by_hash("same")["document_key"] == "acordaos:original"

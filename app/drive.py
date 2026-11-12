@@ -1,7 +1,5 @@
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
-from uuid import uuid4
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -82,13 +80,15 @@ class GoogleDriveClient:
 
     def upload_pdf(self, file_path: Path, folder_id: str, document_key: str) -> str:
         service = self._service()
-        escaped_key = document_key.replace("'", "\\'")
+        escaped_key = document_key.replace("\\", "\\\\").replace("'", "\\'")
+        escaped_folder = folder_id.replace("\\", "\\\\").replace("'", "\\'")
         existing = (
             service.files()
             .list(
                 q=(
                     "appProperties has { key='stf_document_key' and "
-                    f"value='{escaped_key}' }} and trashed = false"
+                    f"value='{escaped_key}' }} and '{escaped_folder}' in parents "
+                    "and trashed = false"
                 ),
                 spaces="drive",
                 fields="files(id)",
@@ -177,8 +177,3 @@ class GoogleDriveClient:
         if not credentials.valid:
             raise DriveIntegrationError("Credenciais Google expiradas. Autorize o Drive novamente.")
         return credentials
-
-
-def authorization_callback_uri(base_url: str, path: str) -> str:
-    parsed = urlparse(base_url)
-    return f"{parsed.scheme}://{parsed.netloc}{path}"

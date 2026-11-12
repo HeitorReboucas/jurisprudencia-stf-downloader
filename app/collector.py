@@ -38,9 +38,7 @@ class Collector:
             try:
                 self._run_locked(job_id)
             finally:
-                close_browser = getattr(self.stf, "close", None)
-                if close_browser:
-                    close_browser()
+                self.stf.close()
 
     def _run_locked(self, job_id: str) -> None:
         job = self.database.get_job(job_id)
@@ -87,7 +85,6 @@ class Collector:
                             job_id,
                             document,
                             filters.get("drive_folder_id"),
-                            counts,
                         )
                         counts = self.database.job_counts(job_id)
                         self.database.update_job(job_id, **counts)
@@ -133,7 +130,6 @@ class Collector:
         job_id: str,
         document: STFDocument,
         drive_folder_id: str | None,
-        counts: dict[str, int],
     ) -> None:
         document_data = {
             "document_key": document.document_key,
@@ -148,25 +144,21 @@ class Collector:
         }
         record = self.database.insert_document(document_data)
         self.database.link_job_document(job_id, record["id"])
-        if record["status"] in {"uploaded", "duplicate"}:
-            self.database.update_job_document_status(job_id, record["id"], record["status"])
+        if record["status"] == "duplicate":
+            self.database.update_job_document_status(job_id, record["id"], "duplicate")
             return
 
-        if record["status"] == "downloaded" and record.get("local_path"):
-            local_path = Path(record["local_path"])
-            if not local_path.is_file():
-                self.database.update_document(record["id"], status="pending", local_path=None)
-                record["status"] = "pending"
+        # An "uploaded" document still goes on: this job may target another Drive folder.
+        local_path = Path(record["local_path"]) if record.get("local_path") else None
+        if record["status"] in {"downloaded", "uploaded"} and local_path and local_path.is_file():
+            self.database.update_job_document_status(job_id, record["id"], "downloaded")
         else:
             local_path = pdf_path(self.settings.downloads_dir, document)
-
-        if record["status"] != "downloaded":
             if not document.pdf_url:
                 self._mark_document_error(
                     job_id,
                     record,
                     "Documento sem URL de inteiro teor disponível no portal.",
-                    counts,
                 )
                 return
             try:
@@ -191,13 +183,9 @@ class Collector:
                     error=None,
                 )
                 self.database.update_job_document_status(job_id, record["id"], "downloaded")
-                record["status"] = "downloaded"
-                record["local_path"] = str(local_path)
             except Exception as error:
-                self._mark_document_error(job_id, record, str(error), counts)
+                self._mark_document_error(job_id, record, str(error))
                 return
-        else:
-            self.database.update_job_document_status(job_id, record["id"], "downloaded")
 
         if not drive_folder_id:
             return
@@ -209,7 +197,6 @@ class Collector:
                 "warning",
                 f"PDF preservado localmente; Drive não autorizado: {document.title}",
             )
-            counts["errors"] += 1
             return
 
         try:
@@ -217,7 +204,7 @@ class Collector:
                 drive_folder_id, document.content_type, document.document_date
             )
             drive_file_id = self.drive.upload_pdf(
-                Path(record["local_path"] or local_path),
+                local_path,
                 archive_folder_id,
                 document.document_key,
             )
@@ -233,10 +220,9 @@ class Collector:
                 "error",
                 f"Upload falhou; PDF preservado localmente ({document.title}): {error}",
             )
-            counts["errors"] += 1
 
     def _mark_document_error(
-        self, job_id: str, record: dict[str, Any], message: str, counts: dict[str, int]
+        self, job_id: str, record: dict[str, Any], message: str
     ) -> None:
         self.database.update_document(
             record["id"], status="error", error=message[:2000]

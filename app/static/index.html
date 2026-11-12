@@ -150,7 +150,7 @@
             <div class="field"><label for="dateFrom">Data inicial (opcional)</label><input id="dateFrom" name="date_from" type="date" /></div>
             <div class="field"><label for="dateTo">Data final (opcional)</label><input id="dateTo" name="date_to" type="date" /></div>
           </div>
-          <div class="field"><label for="query">Palavras-chave</label><input id="query" name="query" maxlength="500" placeholder="mulheres e direito fundamental" /></div>
+          <div class="field"><label for="query">Palavras-chave</label><input id="query" name="query" maxlength="500" required placeholder="mulheres e direito fundamental" /></div>
           <div class="field"><label for="processClass">Classe processual</label><input id="processClass" name="process_class" maxlength="80" placeholder="Opcional, por exemplo RE" /></div>
           <div class="field">
             <label for="driveFolder">Pasta do Google Drive</label>
@@ -324,8 +324,8 @@
         event.preventDefault();
         const selectedTypes = [...form.querySelectorAll("input[name=content_type]:checked")].map((input) => input.value);
         if (!selectedTypes.length) return showMessage("Selecione ao menos um tipo de conteúdo.", true);
-        if (!form.date_from.value && !form.date_to.value && !form.query.value.trim()) {
-          return showMessage("Informe palavras-chave ou selecione ao menos uma data.", true);
+        if (!form.query.value.trim()) {
+          return showMessage("Informe palavras-chave para a pesquisa.", true);
         }
         startButton.disabled = true;
         showMessage("");

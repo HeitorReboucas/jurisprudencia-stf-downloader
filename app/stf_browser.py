@@ -19,7 +19,7 @@ from playwright.sync_api import (
     sync_playwright,
 )
 
-from app.stf import CONTENT_BASES, STFClient, STFDocument, STFTemporaryUnavailable
+from app.stf import CONTENT_BASES, STFDocument, STFTemporaryUnavailable, normalize_document
 
 
 STF_SEARCH_PAGE = "https://jurisprudencia.stf.jus.br/pages/search"
@@ -54,6 +54,8 @@ class STFPortalBrowser:
         self._context: BrowserContext | None = None
         self._page: Page | None = None
         self._extra_filters: list[dict[str, Any]] = []
+        self._result_offset = 0
+        self._page_size = 100
         self._route_error: str | None = None
         self._request_failures: list[str] = []
         self._search_request_seen = False
@@ -82,6 +84,9 @@ class STFPortalBrowser:
         self._extra_filters = self._build_extra_filters(
             date_from, date_to, process_class
         )
+        # Set on the outgoing request, so the form fallback cannot lose the page.
+        self._result_offset = page * page_size
+        self._page_size = page_size
         self._route_error = None
         self._request_failures.clear()
         self._search_request_seen = False
@@ -112,7 +117,7 @@ class STFPortalBrowser:
             for index, hit in enumerate(hits):
                 source = hit.get("_source")
                 try:
-                    document = STFClient._normalize_document(source, content_type)
+                    document = normalize_document(source, content_type)
                 except (TypeError, ValueError) as error:
                     raise STFResponseValidationError(
                         f"Resultado {index + 1} do STF está sem metadados válidos: {error}"
@@ -228,6 +233,8 @@ class STFPortalBrowser:
         except PlaywrightTimeoutError as error:
             direct_navigation_error = error
 
+        if self._route_error:
+            raise STFResponseValidationError(self._route_error) from direct_navigation_error
         if self._request_failures:
             failures = "; ".join(self._request_failures[-3:])
             raise RuntimeError(
@@ -289,22 +296,31 @@ class STFPortalBrowser:
         try:
             self._validate_api_url(route.request.url)
             self._search_request_seen = True
-            request_body = route.request.post_data_json
+            try:
+                request_body = route.request.post_data_json
+            except ValueError:
+                request_body = None
             if not isinstance(request_body, dict):
-                route.continue_()
-                return
+                raise STFResponseValidationError(
+                    "O portal enviou a pesquisa em formato inesperado."
+                )
+            request_body["from"] = self._result_offset
+            request_body["size"] = self._page_size
 
             bool_query = self._find_bool_query(request_body)
             if bool_query is None:
-                route.continue_()
-                return
-
-            filters = bool_query.setdefault("filter", [])
-            if not isinstance(filters, list):
-                raise STFResponseValidationError(
-                    "O portal enviou filtros de pesquisa em formato inesperado."
-                )
-            filters.extend(self._extra_filters)
+                if self._extra_filters:
+                    raise STFResponseValidationError(
+                        "O portal mudou o formato da pesquisa; os filtros de data e "
+                        "classe não puderam ser aplicados."
+                    )
+            else:
+                filters = bool_query.setdefault("filter", [])
+                if not isinstance(filters, list):
+                    raise STFResponseValidationError(
+                        "O portal enviou filtros de pesquisa em formato inesperado."
+                    )
+                filters.extend(self._extra_filters)
             route.continue_(post_data=json.dumps(request_body, ensure_ascii=False))
         except STFResponseValidationError as error:
             self._route_error = str(error)

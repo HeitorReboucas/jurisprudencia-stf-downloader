@@ -210,7 +210,10 @@ class Database:
     def find_document_by_hash(self, digest: str) -> dict[str, Any] | None:
         with self.connect() as connection:
             row = connection.execute(
-                "SELECT * FROM documents WHERE hash_sha256 = ? LIMIT 1", (digest,)
+                # A "duplicate" row has no file of its own, so it can never be the original.
+                "SELECT * FROM documents WHERE hash_sha256 = ? AND status != 'duplicate' "
+                "ORDER BY id LIMIT 1",
+                (digest,),
             ).fetchone()
         return dict(row) if row else None
 
@@ -261,12 +264,12 @@ class Database:
 
     def interrupt_running_jobs(self) -> list[str]:
         with self.connect() as connection:
-            rows = connection.execute("SELECT id FROM jobs WHERE status = 'running'").fetchall()
+            rows = connection.execute("SELECT id FROM jobs WHERE status IN ('running', 'queued')").fetchall()
             job_ids = [row["id"] for row in rows]
             connection.execute(
                 "UPDATE jobs SET status = 'interrupted', "
                 "error = 'Processo encerrado antes da conclusão', updated_at = ? "
-                "WHERE status = 'running'",
+                "WHERE status IN ('running', 'queued')",
                 (_now(),),
             )
         return job_ids

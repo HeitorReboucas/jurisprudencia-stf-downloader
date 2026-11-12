@@ -53,8 +53,6 @@ class PDFDownloader:
                                 raise DownloadError(
                                     f"PDF excedeu o limite de {self.max_bytes} bytes"
                                 )
-                            if total_bytes <= 5 and not b"%PDF-".startswith(chunk[:5]):
-                                raise DownloadError("O conteúdo recebido não possui assinatura PDF")
                             digest.update(chunk)
                             output.write(chunk)
 
@@ -66,6 +64,13 @@ class PDFDownloader:
             except (httpx.HTTPError, OSError, DownloadError) as error:
                 last_error = error
                 partial_path.unlink(missing_ok=True)
+                permanent = isinstance(error, DownloadError) or (
+                    isinstance(error, httpx.HTTPStatusError)
+                    and error.response.status_code < 500
+                    and error.response.status_code not in (408, 429)
+                )
+                if permanent:
+                    break
                 if attempt + 1 < self.max_attempts:
                     time.sleep(min(2**attempt, 8))
 

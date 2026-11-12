@@ -24,8 +24,8 @@ class CollectionRequest(BaseModel):
     def validate_date_range(self) -> "CollectionRequest":
         if self.date_from and self.date_to and self.date_from > self.date_to:
             raise ValueError("A data inicial deve ser anterior ou igual à data final")
-        if not self.date_from and not self.date_to and not (self.query or "").strip():
-            raise ValueError("Informe palavras-chave quando não houver filtro de data")
+        if not (self.query or "").strip():
+            raise ValueError("Informe palavras-chave para a pesquisa")
         self.content_types = list(dict.fromkeys(self.content_types))
         return self
 

@@ -1,29 +1,16 @@
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
-from datetime import date
 from typing import Any
 from urllib.parse import urlencode
 
-import httpx
 
-
-STF_SEARCH_URL = "https://jurisprudencia.stf.jus.br/api/search/search"
 CONTENT_BASES = {
     "acordaos": "acordaos",
     "decisoes_monocraticas": "decisoes",
     "sumulas": "sumulas",
     "informativos": "informativos",
 }
-SEARCH_FIELDS = [
-    "processo_codigo_completo.plural",
-    "titulo.plural^6",
-    "ementa_texto.plural^3",
-    "decisao_texto.plural^2",
-    "inteiro_teor_texto.plural",
-    "documental_indexacao_texto.plural",
-]
 
 
 class STFTemporaryUnavailable(RuntimeError):
@@ -42,127 +29,27 @@ class STFDocument:
     pdf_url: str | None
 
 
-class STFClient:
-    def __init__(
-        self,
-        *,
-        search_url: str = STF_SEARCH_URL,
-        timeout_seconds: float = 30,
-        request_delay_seconds: float = 1.0,
-        max_attempts: int = 3,
-    ) -> None:
-        if request_delay_seconds < 1.0:
-            raise ValueError("O intervalo mínimo entre pesquisas do STF é 1 segundo")
-        self.search_url = search_url
-        self.timeout_seconds = timeout_seconds
-        self.request_delay_seconds = request_delay_seconds
-        self.max_attempts = max_attempts
+def normalize_document(source: dict[str, Any], content_type: str) -> STFDocument:
+    document_id = source.get("id") or source.get("dg_unique") or source.get("titulo")
+    if not document_id:
+        raise ValueError("Documento do STF sem identificador estável")
 
-    def search_page(
-        self,
-        *,
-        query: str | None,
-        content_type: str,
-        date_from: date | None,
-        date_to: date | None,
-        process_class: str | None,
-        page: int,
-        page_size: int = 100,
-    ) -> list[STFDocument]:
-        base = CONTENT_BASES.get(content_type)
-        if base is None:
-            raise ValueError(f"Tipo de conteúdo não suportado: {content_type}")
-
-        filters: list[dict[str, Any]] = [{"term": {"base": base}}]
-        date_range: dict[str, str] = {}
-        if date_from:
-            date_range["gte"] = date_from.isoformat()
-        if date_to:
-            date_range["lte"] = date_to.isoformat()
-        if date_range:
-            filters.append({"range": {"publicacao_data": date_range}})
-        if process_class:
-            filters.append(
+    document_number = source.get("processo_codigo_completo") or source.get("titulo")
+    return STFDocument(
+        document_key=f"{source.get('base', content_type)}:{document_id}",
+        title=str(source.get("titulo") or document_number or document_id),
+        process=document_number,
+        process_class=source.get("processo_classe_processual_unificada_sigla"),
+        content_type=content_type,
+        document_date=source.get("publicacao_data") or source.get("julgamento_data"),
+        source_url=(
+            "https://jurisprudencia.stf.jus.br/pages/search?"
+            + urlencode(
                 {
-                    "match_phrase": {
-                        "processo_classe_processual_unificada_sigla": process_class
-                    }
+                    "base": CONTENT_BASES[content_type],
+                    "queryString": str(document_id),
                 }
             )
-
-        search_query: dict[str, Any]
-        if query:
-            search_query = {
-                "query_string": {
-                    "query": query,
-                    "default_operator": "AND",
-                    "fields": SEARCH_FIELDS,
-                }
-            }
-        else:
-            search_query = {"match_all": {}}
-
-        body = {
-            "from": page * page_size,
-            "size": page_size,
-            "sort": [{"publicacao_data": {"order": "asc", "unmapped_type": "date"}}],
-            "query": {"bool": {"must": [search_query], "filter": filters}},
-        }
-
-        response_data = self._post_search(body)
-        hits = response_data.get("result", {}).get("hits", {}).get("hits", [])
-        return [
-            self._normalize_document(hit.get("_source", {}), content_type)
-            for hit in hits
-        ]
-
-    def _post_search(self, body: dict[str, Any]) -> dict[str, Any]:
-        last_error: Exception | None = None
-        for attempt in range(self.max_attempts):
-            try:
-                time.sleep(self.request_delay_seconds)
-                with httpx.Client(timeout=self.timeout_seconds) as client:
-                    response = client.post(
-                        self.search_url,
-                        json=body,
-                        headers={"User-Agent": "STF-Jurisprudencias-Coletor/1.0"},
-                    )
-                    response.raise_for_status()
-                    if response.status_code == 202 and not response.content:
-                        raise STFTemporaryUnavailable(
-                            "O portal STF retornou HTTP 202 com resposta vazia; "
-                            "aguarde antes de iniciar outra coleta."
-                        )
-                    return response.json()
-            except (httpx.HTTPError, ValueError) as error:
-                last_error = error
-                if attempt + 1 < self.max_attempts:
-                    time.sleep(min(2**attempt, 8))
-
-        raise RuntimeError(f"Falha na pesquisa oficial do STF: {last_error}") from last_error
-
-    @staticmethod
-    def _normalize_document(source: dict[str, Any], content_type: str) -> STFDocument:
-        document_id = source.get("id") or source.get("dg_unique") or source.get("titulo")
-        if not document_id:
-            raise ValueError("Documento do STF sem identificador estável")
-
-        document_number = source.get("processo_codigo_completo") or source.get("titulo")
-        return STFDocument(
-            document_key=f"{source.get('base', content_type)}:{document_id}",
-            title=str(source.get("titulo") or document_number or document_id),
-            process=document_number,
-            process_class=source.get("processo_classe_processual_unificada_sigla"),
-            content_type=content_type,
-            document_date=source.get("publicacao_data") or source.get("julgamento_data"),
-            source_url=(
-                "https://jurisprudencia.stf.jus.br/pages/search?"
-                + urlencode(
-                    {
-                        "base": CONTENT_BASES[content_type],
-                        "queryString": str(document_id),
-                    }
-                )
-            ),
-            pdf_url=source.get("inteiro_teor_url"),
-        )
+        ),
+        pdf_url=source.get("inteiro_teor_url"),
+    )
