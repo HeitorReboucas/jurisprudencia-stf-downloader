@@ -6,7 +6,7 @@
 
 Este programa pesquisa decisões e outros documentos públicos no portal do Supremo Tribunal Federal (STF) e tenta baixar o arquivo PDF de inteiro teor quando ele está disponível.
 
-Você escolhe o tipo de documento, pode digitar palavras-chave e pode limitar a pesquisa por data. Os arquivos são salvos no seu computador. Se configurar o Google Drive, também pode pedir que sejam enviados para uma pasta da sua conta.
+Você escolhe o tipo de documento, digita palavras-chave e pode limitar a pesquisa por data. Os arquivos são salvos no seu computador. Se configurar o Google Drive, também pode pedir que sejam enviados para uma pasta da sua conta.
 
 O programa roda no seu computador; não é necessário publicar um site ou contratar um servidor. É preciso estar conectado à internet durante as pesquisas e os downloads.
 
@@ -16,10 +16,10 @@ Estas instruções são para Windows 10 ou 11.
 
 ### 1. Baixar e abrir o projeto
 
-1. Abra a página do [Projeto Jurisprudência STF no GitHub](https://github.com/HeitorReboucas/Projeto-Jurisprudenciastf).
+1. Abra a página do [Projeto Jurisprudência STF no GitHub](https://github.com/HeitorReboucas/jurisprudencia-stf-downloader).
 2. Clique no botão verde **Code** e escolha **Download ZIP**.
 3. Quando o download terminar, clique com o botão direito no arquivo ZIP e escolha **Extrair Tudo**. Não execute o programa de dentro do ZIP.
-4. Abra o VS Code. Escolha **Arquivo > Abrir Pasta** e selecione a pasta `Projeto-Jurisprudenciastf` que foi extraída.
+4. Abra o VS Code. Escolha **Arquivo > Abrir Pasta** e selecione a pasta `jurisprudencia-stf-downloader-main` que foi extraída.
 5. No VS Code, escolha **Terminal > Novo Terminal**. Os comandos abaixo devem ser digitados nesse terminal, dentro da pasta do projeto.
 
 ### 2. Instalar o Python
@@ -36,7 +36,7 @@ Deve aparecer uma versão do Python. Se o comando `py` não for encontrado, inst
 
 ### 3. Preparar o projeto
 
-No terminal, confirme que está na pasta `Projeto-Jurisprudenciastf` e execute estes comandos, um de cada vez:
+No terminal, confirme que está na pasta `jurisprudencia-stf-downloader-main` e execute estes comandos, um de cada vez:
 
 ```powershell
 py -3 -m venv .venv
@@ -106,7 +106,7 @@ Por padrão, o portal procura documentos que correspondam a todos os termos digi
 | **Duplicados** | PDFs idênticos a outro arquivo já registrado. |
 | **Erros** | Documentos ou envios que precisam de atenção. Consulte o registro da execução. |
 
-O seletor **Coletas recentes** permite consultar uma execução anterior. Se uma coleta for interrompida, selecione-a e use **Retomar** depois de resolver ou aguardar a causa da interrupção.
+O seletor **Coletas recentes** permite consultar uma execução anterior. Se uma coleta for interrompida, selecione-a e use **Retomar** depois de resolver ou aguardar a causa da interrupção. Coletas que ainda estavam na fila quando o programa foi fechado também aparecem como interrompidas e podem ser retomadas.
 
 ## Onde os arquivos ficam
 
@@ -176,6 +176,8 @@ No macOS e Linux, faça esse passo logo depois de instalar as dependências. Se 
 ### A coleta ficou como “Interrompida” e mostra HTTP 202
 
 O coletor abre a página oficial de pesquisa em um navegador e valida automaticamente o endereço da requisição, o formato da resposta e a origem dos links de PDF antes de processar documentos. Se a URL de pesquisa não iniciar a busca, ele tenta enviar as palavras pelo campo oficial do próprio portal. Em alguns momentos o STF ainda pode responder temporariamente sem resultados, inclusive por controles de tráfego. O programa registra a interrupção e não tenta contornar essa proteção. Aguarde um pouco e depois selecione a coleta em **Coletas recentes** e clique em **Retomar**.
+
+Se o registro disser que os filtros de data e classe não puderam ser aplicados, o portal mudou o formato da pesquisa. O programa para a coleta em vez de baixar documentos fora do período ou da classe escolhidos. Nesse caso, o código de integração precisa ser atualizado.
 
 ### Um documento aparece como erro ou não foi baixado
 
