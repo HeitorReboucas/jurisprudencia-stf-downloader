@@ -60,8 +60,6 @@ def content_types() -> list[dict[str, str]]:
     return [
         {"id": "acordaos", "label": "Acórdãos"},
         {"id": "decisoes_monocraticas", "label": "Decisões monocráticas"},
-        {"id": "sumulas", "label": "Súmulas"},
-        {"id": "informativos", "label": "Informativos"},
     ]
 
 

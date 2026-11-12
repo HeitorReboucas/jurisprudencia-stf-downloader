@@ -43,6 +43,7 @@ def test_downloader_retries_rate_limited_response(tmp_path) -> None:
     import httpx
 
     limited = MagicMock()
+    limited.headers = {}
     limited.raise_for_status.side_effect = httpx.HTTPStatusError(
         "429", request=MagicMock(), response=MagicMock(status_code=429)
     )
@@ -64,8 +65,13 @@ def test_downloader_retries_rate_limited_response(tmp_path) -> None:
 
 
 def test_downloader_reports_anti_bot_challenge_without_retrying(tmp_path) -> None:
+    import httpx
+
     response = MagicMock()
-    response.headers = {"x-amzn-waf-action": "challenge", "content-type": "text/html"}
+    response.headers = {"x-amzn-waf-action": "captcha", "content-type": "text/html"}
+    response.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "405", request=MagicMock(), response=MagicMock(status_code=405)
+    )
 
     with patch("app.downloader.httpx.stream") as stream:
         stream.return_value.__enter__.return_value = response
@@ -75,3 +81,18 @@ def test_downloader_reports_anti_bot_challenge_without_retrying(tmp_path) -> Non
             )
 
     assert stream.call_count == 1
+
+
+def test_downloader_reports_empty_file_clearly(tmp_path) -> None:
+    response = MagicMock()
+    response.headers = {"content-type": "application/pdf"}
+    response.iter_bytes.return_value = []
+
+    with patch("app.downloader.httpx.stream") as stream:
+        stream.return_value.__enter__.return_value = response
+        with pytest.raises(DownloadError, match="arquivo vazio"):
+            PDFDownloader(max_attempts=1).download(
+                "https://portal.stf.jus.br/documento.pdf", tmp_path / "document.pdf"
+            )
+
+    assert not (tmp_path / "document.pdf").exists()

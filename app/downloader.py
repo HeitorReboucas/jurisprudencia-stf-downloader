@@ -37,13 +37,14 @@ class PDFDownloader:
                     follow_redirects=True,
                     headers={"User-Agent": "STF-Jurisprudencias-Coletor/1.0"},
                 ) as response:
-                    response.raise_for_status()
+                    # Before raise_for_status: the CAPTCHA variant of this check answers HTTP 405.
                     if response.headers.get("x-amzn-waf-action"):
                         raise DownloadError(
                             "O STF exigiu uma verificação anti-robô para este arquivo, e o "
                             "programa não contorna essa proteção. Baixe o PDF manualmente "
                             "pelo portal do STF."
                         )
+                    response.raise_for_status()
                     content_type = response.headers.get("content-type", "").lower()
                     if "pdf" not in content_type and "octet-stream" not in content_type:
                         raise DownloadError(
@@ -62,6 +63,11 @@ class PDFDownloader:
                             digest.update(chunk)
                             output.write(chunk)
 
+                if total_bytes == 0:
+                    raise DownloadError(
+                        "O STF enviou um arquivo vazio para este documento. "
+                        "Tente baixá-lo mais tarde pelo portal do STF."
+                    )
                 with partial_path.open("rb") as downloaded_file:
                     if downloaded_file.read(5) != b"%PDF-":
                         raise DownloadError("O conteúdo recebido não possui assinatura PDF")

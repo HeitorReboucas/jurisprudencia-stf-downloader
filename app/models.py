@@ -7,8 +7,6 @@ from pydantic import BaseModel, Field, model_validator
 ContentType = Literal[
     "acordaos",
     "decisoes_monocraticas",
-    "sumulas",
-    "informativos",
 ]
 
 

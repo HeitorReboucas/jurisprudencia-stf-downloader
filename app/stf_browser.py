@@ -21,7 +21,6 @@ from playwright.sync_api import (
 
 from app.stf import (
     CONTENT_BASES,
-    RESULT_BASES,
     STFDocument,
     STFTemporaryUnavailable,
     normalize_document,
@@ -128,11 +127,7 @@ class STFPortalBrowser:
                     raise STFResponseValidationError(
                         f"Resultado {index + 1} do STF está sem metadados válidos: {error}"
                     ) from error
-                if document.content_type != content_type:
-                    raise STFResponseValidationError(
-                        f"Resultado {index + 1} pertence a uma base inesperada."
-                    )
-                if source.get("base") not in RESULT_BASES[content_type]:
+                if source.get("base") != CONTENT_BASES[content_type]:
                     raise STFResponseValidationError(
                         f"Resultado {index + 1} veio de uma base inesperada do STF."
                     )

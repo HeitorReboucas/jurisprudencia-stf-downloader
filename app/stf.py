@@ -8,15 +8,6 @@ from urllib.parse import urlencode
 CONTENT_BASES = {
     "acordaos": "acordaos",
     "decisoes_monocraticas": "decisoes",
-    "sumulas": "sumulas",
-    "informativos": "informativos",
-}
-# The "base" the portal writes in each result; searching base=informativos returns "novo_informativo".
-RESULT_BASES = {
-    "acordaos": {"acordaos"},
-    "decisoes_monocraticas": {"decisoes"},
-    "sumulas": {"sumulas"},
-    "informativos": {"informativos", "novo_informativo"},
 }
 
 

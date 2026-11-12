@@ -7,8 +7,6 @@ from app.stf import STFDocument
 FOLDER_NAMES = {
     "acordaos": "Acórdãos",
     "decisoes_monocraticas": "Decisões Monocráticas",
-    "sumulas": "Súmulas",
-    "informativos": "Informativos",
 }
 
 

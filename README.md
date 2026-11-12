@@ -84,7 +84,7 @@ Para encerrar, volte ao terminal e pressione **Ctrl+C**. O endereço é local: s
 
 Na página que abrir no navegador:
 
-1. Em **Tipo de conteúdo**, marque o material que deseja pesquisar. A opção **Acórdãos** já vem selecionada.
+1. Em **Tipo de conteúdo**, marque **Acórdãos**, **Decisões monocráticas** ou os dois. A opção **Acórdãos** já vem selecionada. Súmulas e informativos não aparecem porque o portal do STF não oferece PDF de inteiro teor para eles.
 2. Digite os termos no campo **Palavras-chave**. Por exemplo: `mulheres e direito fundamental`.
 3. Se não quiser limitar por data, deixe **Data inicial** e **Data final** vazias. A pesquisa usará as datas disponíveis no portal.
 4. Se quiser limitar o período, informe uma data inicial, uma data final ou ambas. As datas se referem à **publicação** do documento.
@@ -118,8 +118,6 @@ data/
 		STF/
 			Acórdãos/2024/
 			Decisões Monocráticas/2024/
-			Súmulas/2024/
-			Informativos/2024/
 	jurisprudencias.sqlite3
 ```
 
@@ -183,7 +181,6 @@ Se o registro disser que os filtros de data e classe não puderam ser aplicados,
 
 Nem todo resultado tem um arquivo de inteiro teor disponível para download. O coletor registra esse caso e continua com os outros documentos. Abra o registro da execução para ver a mensagem específica.
 
-- **Súmulas e informativos:** o portal normalmente não informa um PDF de inteiro teor para esses tipos, então eles costumam aparecer como erro com a mensagem "sem URL de inteiro teor".
 - **Verificação anti-robô:** o servidor de documentos do STF pode exigir uma verificação anti-robô antes de liberar o PDF, o que acontece com frequência nos acórdãos. O programa não contorna essa proteção; o registro indica o documento, que pode ser baixado manualmente pelo portal.
 
 ### O Google Drive não conecta ou o upload falha
@@ -225,7 +222,7 @@ Para iniciar uma coleta por API, envie uma requisição `POST /api/jobs`. Este e
 }
 ```
 
-O campo `query` é obrigatório. As datas `date_from` e `date_to` são opcionais. Valores possíveis para `content_types`: `acordaos`, `decisoes_monocraticas`, `sumulas` e `informativos`.
+O campo `query` é obrigatório. As datas `date_from` e `date_to` são opcionais. Valores possíveis para `content_types`: `acordaos` e `decisoes_monocraticas`.
 
 Principais endereços da API:
 

@@ -35,8 +35,6 @@ def test_api_creates_and_reads_a_job(tmp_path, monkeypatch) -> None:
         assert {item["id"] for item in types.json()} == {
             "acordaos",
             "decisoes_monocraticas",
-            "sumulas",
-            "informativos",
         }
         assert created.status_code == 202
         job_id = created.json()["id"]
