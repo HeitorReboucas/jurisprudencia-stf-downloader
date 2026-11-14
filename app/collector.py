@@ -125,6 +125,10 @@ class Collector:
             )
             self.database.add_event(job_id, "error", f"Execução interrompida: {error}")
 
+    def downloads_dir(self) -> Path:
+        """Folder chosen in the interface, or the default inside DATA_DIR."""
+        return Path(self.database.get_setting("downloads_dir") or self.settings.downloads_dir)
+
     def _process_document(
         self,
         job_id: str,
@@ -153,7 +157,7 @@ class Collector:
         if record["status"] in {"downloaded", "uploaded"} and local_path and local_path.is_file():
             self.database.update_job_document_status(job_id, record["id"], "downloaded")
         else:
-            local_path = pdf_path(self.settings.downloads_dir, document)
+            local_path = pdf_path(self.downloads_dir(), document)
             if not document.pdf_url:
                 self._mark_document_error(
                     job_id,

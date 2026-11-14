@@ -265,3 +265,18 @@ def test_download_error_is_written_to_the_job_log(tmp_path) -> None:
 
     messages = [event["message"] for event in database.list_events("job-log")]
     assert any("RE 6" in message and "anti-robô" in message for message in messages)
+
+
+def test_collector_saves_pdfs_in_chosen_folder(tmp_path) -> None:
+    collector, database = make_collector(tmp_path)
+    make_job(database, "job-folder")
+    chosen = tmp_path / "outra pasta"
+    database.set_setting("downloads_dir", str(chosen))
+    collector.stf = FakeSTF({0: [make_document("7")]})
+    collector.downloader = FakeDownloader()
+
+    collector.run("job-folder")
+
+    local_path = Path(database.list_documents()[0]["local_path"])
+    assert local_path.is_file()
+    assert chosen in local_path.parents

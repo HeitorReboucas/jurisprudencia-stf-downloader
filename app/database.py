@@ -17,12 +17,13 @@ class Database:
     def connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=30)
         connection.row_factory = sqlite3.Row
-        connection.execute("PRAGMA journal_mode=WAL")
         connection.execute("PRAGMA foreign_keys=ON")
         return connection
 
     def initialize(self) -> None:
         with self.connect() as connection:
+            # WAL is stored in the database file, so it only needs to be set once.
+            connection.execute("PRAGMA journal_mode=WAL")
             connection.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS jobs (
@@ -75,8 +76,31 @@ class Database:
                     status TEXT NOT NULL DEFAULT 'discovered',
                     PRIMARY KEY (job_id, document_id)
                 );
+                CREATE TABLE IF NOT EXISTS app_settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                );
                 """
             )
+
+    def get_setting(self, key: str) -> str | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT value FROM app_settings WHERE key = ?", (key,)
+            ).fetchone()
+        return row["value"] if row else None
+
+    def set_setting(self, key: str, value: str | None) -> None:
+        """Save a setting; None removes it, so the default applies again."""
+        with self.connect() as connection:
+            if value is None:
+                connection.execute("DELETE FROM app_settings WHERE key = ?", (key,))
+            else:
+                connection.execute(
+                    "INSERT INTO app_settings (key, value) VALUES (?, ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                    (key, value),
+                )
 
     def create_job(self, job_id: str, filters: dict[str, Any]) -> None:
         timestamp = _now()

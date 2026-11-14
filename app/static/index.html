@@ -3,390 +3,790 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>Coletor STF</title>
     <style>
       :root {
-        color-scheme: light;
-        --ink: #1f2b2a;
-        --muted: #64716f;
-        --line: #d8e0dd;
-        --paper: #fbfcfa;
-        --panel: #ffffff;
-        --green: #155c4d;
-        --green-dark: #10483d;
-        --mint: #e5f0ec;
-        --amber: #9a5b12;
-        --red: #a53232;
+        --bg: #f3f5f4;
+        --surface: #ffffff;
+        --surface-2: #f7f9f8;
+        --ink: #15201d;
+        --muted: #5a6864;
+        --line: #e0e6e3;
+        --line-strong: #c3cec9;
+        --accent: #0f6b57;
+        --accent-hover: #0b5646;
+        --accent-soft: #e2f1ec;
+        --accent-ink: #0a4639;
+        --on-accent: #ffffff;
+        --warn: #8a5300;
+        --warn-soft: #fdf1dc;
+        --danger: #b42318;
+        --danger-soft: #fdecea;
+        --info: #2457a6;
+        --info-soft: #e7effb;
+        --shadow: 0 1px 2px rgba(16, 24, 22, .05), 0 6px 18px rgba(16, 24, 22, .05);
+        --radius: 14px;
+        --radius-sm: 9px;
+        --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0e1312;
+          --surface: #161c1b;
+          --surface-2: #1c2422;
+          --ink: #e6eeeb;
+          --muted: #9badA8;
+          --line: #263030;
+          --line-strong: #394643;
+          --accent: #44b896;
+          --accent-hover: #5fcaa9;
+          --accent-soft: #15382f;
+          --accent-ink: #a3e6d0;
+          --on-accent: #06231c;
+          --warn: #f0b45a;
+          --warn-soft: #382a12;
+          --danger: #f2877c;
+          --danger-soft: #3b1b18;
+          --info: #8ab4f0;
+          --info-soft: #1a2940;
+          --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 22px rgba(0, 0, 0, .25);
+        }
       }
 
       * { box-sizing: border-box; }
+      [hidden] { display: none !important; }
       body {
         margin: 0;
-        background: var(--paper);
+        min-height: 100vh;
+        background: var(--bg);
         color: var(--ink);
-        font: 15px/1.45 "Segoe UI", sans-serif;
+        font: 15px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
       }
-      header {
-        min-height: 68px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        padding: 12px max(24px, calc((100vw - 1180px) / 2));
-        color: #fff;
-        background: var(--green-dark);
+      .skip-link { position: absolute; left: 12px; top: -48px; z-index: 20; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--accent); color: var(--on-accent); }
+      .skip-link:focus { top: 12px; }
+
+      /* ---------- Top bar ---------- */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        backdrop-filter: blur(10px);
       }
+      .topbar-inner, main { width: min(1220px, calc(100% - 40px)); margin-inline: auto; }
+      .topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
       .brand { display: flex; align-items: center; gap: 12px; }
       .brand-mark {
         display: grid;
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         place-items: center;
-        border: 1px solid #84b7a8;
-        border-radius: 50%;
-        color: #c7e2d8;
-        font: 17px Georgia, serif;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #12806a, #0a3f34);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: .5px;
       }
-      h1 { margin: 0; font: 20px Georgia, serif; }
-      .drive-state { display: flex; align-items: center; gap: 10px; color: #e2eee9; }
-      .drive-state button { border-color: #8caf9f; color: #fff; background: transparent; }
+      h1 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+      .brand small { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; }
+      .drive-area { display: flex; align-items: center; gap: 10px; }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 11px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface-2);
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      .chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+      .chip.is-on { border-color: transparent; background: var(--accent-soft); color: var(--accent-ink); }
+      .chip.is-on::before { background: var(--accent); }
+
+      /* ---------- Layout ---------- */
       main {
         display: grid;
-        grid-template-columns: minmax(350px, 0.9fr) minmax(430px, 1.1fr);
-        gap: 30px;
-        width: min(1180px, calc(100% - 48px));
-        margin: 34px auto;
+        grid-template-columns: minmax(340px, 5fr) minmax(0, 7fr);
+        align-items: start;
+        gap: 24px;
+        margin-block: 28px 56px;
       }
-      section { min-width: 0; }
-      h2 { margin: 0 0 19px; font: 21px Georgia, serif; }
-      h3 { margin: 0 0 12px; font-size: 15px; }
-      .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-      .field { display: grid; gap: 7px; margin-bottom: 17px; }
-      label, legend { font-size: 13px; font-weight: 650; }
+      .stack { display: grid; gap: 24px; min-width: 0; }
+      .card {
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+      .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+      h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -.01em; overflow-wrap: anywhere; }
+      .subtitle { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+
+      /* ---------- Form ---------- */
+      .field { display: grid; gap: 6px; margin-bottom: 18px; }
+      label, legend, .label { font-size: 13px; font-weight: 600; }
+      .optional { color: var(--muted); font-weight: 400; }
+      .hint { margin: 0; color: var(--muted); font-size: 12.5px; }
       input, select {
         width: 100%;
         min-height: 42px;
-        padding: 9px 11px;
-        border: 1px solid #aebbb6;
-        border-radius: 3px;
-        background: #fff;
+        padding: 9px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
         color: var(--ink);
         font: inherit;
+        transition: border-color .15s, box-shadow .15s;
       }
-      input:focus, select:focus, button:focus-visible {
-        outline: 3px solid #a7d2c4;
-        outline-offset: 2px;
-      }
-      fieldset { min-width: 0; margin: 0 0 19px; padding: 0; border: 0; }
-      .type-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; }
-      .type-option { display: flex; align-items: center; gap: 8px; min-height: 28px; font-weight: 450; }
-      .type-option input { width: 16px; min-height: 16px; accent-color: var(--green); }
-      .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-      button {
-        min-height: 40px;
-        padding: 8px 14px;
-        border: 1px solid var(--green);
-        border-radius: 3px;
-        color: #fff;
-        background: var(--green);
-        font: inherit;
-        font-weight: 650;
+      input::placeholder { color: color-mix(in srgb, var(--muted) 70%, transparent); }
+      input:hover, select:hover { border-color: var(--muted); }
+      input:focus, select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+      input[aria-invalid="true"] { border-color: var(--danger); }
+      .search-input { min-height: 48px; font-size: 16px; }
+      fieldset { min-width: 0; margin: 0 0 18px; padding: 0; border: 0; }
+      legend { margin-bottom: 8px; padding: 0; }
+      .type-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .type-option {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 10px;
+        align-items: start;
+        padding: 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
         cursor: pointer;
+        transition: border-color .15s, background .15s;
       }
-      button:hover { background: var(--green-dark); }
-      button.secondary { color: var(--green-dark); background: #fff; }
-      button.secondary:hover { background: var(--mint); }
-      button:disabled { cursor: wait; opacity: .6; }
-      .primary { width: 100%; min-height: 46px; margin-top: 3px; }
-      .status-panel { padding: 0 0 22px; border-bottom: 1px solid var(--line); }
-      .status-line { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
-      .status-label { font-size: 17px; font-weight: 700; }
-      .status-pill { padding: 4px 9px; border-radius: 12px; background: var(--mint); color: var(--green-dark); font-size: 12px; }
-      .progress-track { height: 10px; overflow: hidden; border-radius: 5px; background: #e4e9e6; }
-      .progress-value { width: 0; height: 100%; background: #398b71; transition: width .2s ease; }
-      .progress-caption { display: flex; justify-content: space-between; margin-top: 7px; color: var(--muted); font-size: 13px; }
-      .metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 20px 0; }
-      .metric { padding-right: 10px; border-right: 1px solid var(--line); }
-      .metric:last-child { border: 0; }
-      .metric strong { display: block; font: 22px Georgia, serif; }
-      .metric span { color: var(--muted); font-size: 12px; }
-      .current-item { min-height: 22px; overflow-wrap: anywhere; color: var(--muted); font-size: 13px; }
-      .log-list { max-height: 300px; overflow: auto; padding: 0; list-style: none; }
-      .log-list li { padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
-      .log-list time { display: block; margin-bottom: 3px; color: var(--muted); font-size: 11px; }
-      .error { color: var(--red); }
-      .message { min-height: 20px; margin: -4px 0 14px; color: var(--amber); font-size: 13px; }
-      .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-      @media (max-width: 820px) {
-        header { padding-inline: 20px; }
-        main { grid-template-columns: 1fr; gap: 34px; width: min(100% - 36px, 640px); margin: 26px auto; }
-        .metrics { grid-template-columns: repeat(3, 1fr); row-gap: 17px; }
+      .type-option:hover { border-color: var(--muted); }
+      .type-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+      .type-option:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+      .type-option input { grid-row: span 2; width: 18px; min-height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
+      .type-option strong { font-size: 14px; font-weight: 600; }
+      .type-option span { color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+      .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .row-2 .field { margin-bottom: 0; }
+      .period { margin-bottom: 18px; }
+      .period .hint { margin-top: 6px; }
+
+      /* Save location */
+      .save-location {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 18px;
+        padding: 14px;
+        border: 1px dashed var(--line-strong);
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
       }
-      @media (max-width: 460px) {
-        header { align-items: flex-start; flex-direction: column; }
-        .type-list { grid-template-columns: 1fr; }
-        .date-row { grid-template-columns: 1fr; gap: 0; }
+      .save-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .path {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        font: 12.5px/1.4 var(--mono);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        direction: rtl;
+        text-align: left;
+      }
+      .path bdi { direction: ltr; unicode-bidi: isolate; }
+      .badge { padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+      .folder-editor { display: grid; gap: 10px; }
+      .path-input { font: 13px/1.4 var(--mono); }
+
+      /* ---------- Buttons ---------- */
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        color: var(--on-accent);
+        background: var(--accent);
+        font: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background .15s, border-color .15s, transform .05s;
+      }
+      button:hover { background: var(--accent-hover); }
+      button:active { transform: translateY(1px); }
+      button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+      button:disabled { cursor: not-allowed; opacity: .55; transform: none; }
+      button.secondary { border-color: var(--line-strong); color: var(--ink); background: var(--surface); }
+      button.secondary:hover { border-color: var(--muted); background: var(--surface-2); }
+      button.ghost { min-height: 32px; padding: 4px 10px; border-color: transparent; color: var(--accent); background: transparent; }
+      button.ghost:hover { background: var(--accent-soft); }
+      button.small { min-height: 32px; padding: 5px 11px; font-size: 13px; }
+      .btn-primary { width: 100%; min-height: 50px; font-size: 15.5px; }
+      .button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+      .message { margin: 0 0 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--warn-soft); color: var(--warn); font-size: 13.5px; }
+      .message.is-error { background: var(--danger-soft); color: var(--danger); }
+      .message.is-ok { background: var(--accent-soft); color: var(--accent-ink); }
+      .message:empty { display: none; }
+
+      /* ---------- Job panel ---------- */
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--surface-2);
+        color: var(--muted);
+        font-size: 12.5px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+      .status[data-status="queued"], .status[data-status="running"] { background: var(--info-soft); color: var(--info); }
+      .status[data-status="running"]::before { animation: pulse 1.4s ease-in-out infinite; }
+      .status[data-status="completed"] { background: var(--accent-soft); color: var(--accent-ink); }
+      .status[data-status="completed_with_errors"] { background: var(--warn-soft); color: var(--warn); }
+      .status[data-status="interrupted"] { background: var(--danger-soft); color: var(--danger); }
+      @keyframes pulse { 50% { opacity: .3; } }
+      .job-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 6px; color: var(--muted); font-size: 13px; }
+      .empty-state { padding: 36px 12px; color: var(--muted); text-align: center; }
+      .empty-state strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: 15px; }
+      .progress-track { height: 8px; overflow: hidden; border-radius: 999px; background: var(--line); }
+      .progress-value { width: 0; height: 100%; border-radius: inherit; background: var(--accent); transition: width .3s ease; }
+      .progress-track[data-status="completed_with_errors"] .progress-value { background: var(--warn); }
+      .progress-track[data-status="interrupted"] .progress-value { background: var(--danger); }
+      .progress-track[data-status="queued"] .progress-value, .progress-track[data-status="running"] .progress-value { background: var(--info); }
+      .progress-caption { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; color: var(--muted); font-size: 13px; }
+      .current-item { margin: 10px 0 0; overflow-wrap: anywhere; color: var(--muted); font-size: 13px; }
+      .current-item:empty { display: none; }
+      .alert { margin-top: 14px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--danger-soft); color: var(--danger); font-size: 13.5px; overflow-wrap: anywhere; }
+      .metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 18px 0; }
+      .metric { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-2); }
+      .metric strong { display: block; font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+      .metric span { color: var(--muted); font-size: 12.5px; }
+      .metric.is-good strong { color: var(--accent); }
+      .metric.is-bad strong { color: var(--danger); }
+      .job-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+
+      details.log { border-top: 1px solid var(--line); padding-top: 14px; }
+      details.log summary { display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 600; list-style: none; }
+      details.log summary::-webkit-details-marker { display: none; }
+      details.log summary::after { content: "▾"; color: var(--muted); transition: transform .15s; }
+      details.log:not([open]) summary::after { transform: rotate(-90deg); }
+      .log-list { display: grid; gap: 2px; max-height: 340px; margin: 10px 0 0; padding: 0; overflow: auto; list-style: none; }
+      .log-list li { display: grid; grid-template-columns: auto 1fr; gap: 1px 12px; padding: 8px 10px; border-radius: var(--radius-sm); font-size: 13.5px; }
+      .log-list li:hover { background: var(--surface-2); }
+      .log-list li::before { content: ""; grid-row: span 2; width: 8px; height: 8px; margin-top: 7px; border-radius: 50%; background: var(--info); }
+      .log-list li.log-warning::before { background: var(--warn); }
+      .log-list li.log-error::before { background: var(--danger); }
+      .log-list li.log-error span { color: var(--danger); }
+      .log-list time { color: var(--muted); font-size: 12px; }
+      .log-list span { overflow-wrap: anywhere; }
+
+      /* ---------- History ---------- */
+      .history { display: grid; gap: 6px; max-height: 420px; margin: 0; padding: 0; overflow: auto; list-style: none; }
+      .history button {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 2px 12px;
+        width: 100%;
+        min-height: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: var(--surface);
+        font-weight: 400;
+        text-align: left;
+        white-space: normal;
+      }
+      .history button:hover { border-color: var(--line-strong); background: var(--surface-2); }
+      .history button[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
+      .history .q { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+      .history .when { color: var(--muted); font-size: 12.5px; }
+      .history .status { grid-row: span 2; align-self: center; }
+
+      @media (max-width: 940px) {
+        main { grid-template-columns: 1fr; width: min(700px, calc(100% - 32px)); margin-top: 20px; }
+        .topbar-inner { width: calc(100% - 32px); }
+        .metrics { grid-template-columns: repeat(3, 1fr); }
+      }
+      @media (max-width: 520px) {
+        .card { padding: 18px; }
+        .topbar-inner { flex-wrap: wrap; padding: 10px 0; }
+        .brand small { display: none; }
+        .type-list, .row-2 { grid-template-columns: 1fr; }
+        .row-2 { gap: 18px; }
         .metrics { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; animation: none !important; }
       }
     </style>
   </head>
   <body>
-    <header>
-      <div class="brand"><span class="brand-mark" aria-hidden="true">S</span><h1>Jurisprudência STF</h1></div>
-      <div class="drive-state">
-        <span id="driveStatus">Google Drive desconectado</span>
-        <button class="secondary" id="connectDrive" type="button">Conectar Drive</button>
+    <a class="skip-link" href="#query">Ir para a pesquisa</a>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">STF</span>
+          <h1>Jurisprudência STF<small>Baixe PDFs de inteiro teor do portal oficial</small></h1>
+        </div>
+        <div class="drive-area">
+          <span class="chip" id="driveStatus" role="status">Drive desconectado</span>
+          <button class="secondary small" id="connectDrive" type="button">Conectar Drive</button>
+        </div>
       </div>
     </header>
+
     <main>
-      <section aria-labelledby="collectionHeading">
-        <h2 id="collectionHeading">Nova coleta</h2>
-        <form id="collectionForm">
-          <fieldset>
-            <legend>Tipo de conteúdo</legend>
-            <div class="type-list" id="contentTypes"></div>
-          </fieldset>
-          <div class="date-row">
-            <div class="field"><label for="dateFrom">Data inicial (opcional)</label><input id="dateFrom" name="date_from" type="date" /></div>
-            <div class="field"><label for="dateTo">Data final (opcional)</label><input id="dateTo" name="date_to" type="date" /></div>
+      <!-- 1. Search -->
+      <section class="card" aria-labelledby="searchHeading">
+        <div class="card-head">
+          <div>
+            <h2 id="searchHeading">Nova pesquisa</h2>
+            <p class="subtitle">Os PDFs encontrados são baixados para o seu computador.</p>
           </div>
-          <div class="field"><label for="query">Palavras-chave</label><input id="query" name="query" maxlength="500" required placeholder="mulheres e direito fundamental" /></div>
-          <div class="field"><label for="processClass">Classe processual</label><input id="processClass" name="process_class" maxlength="80" placeholder="Opcional, por exemplo RE" /></div>
+        </div>
+        <form id="collectionForm" novalidate>
           <div class="field">
-            <label for="driveFolder">Pasta do Google Drive</label>
-            <select id="driveFolder" name="drive_folder_id"><option value="">Não enviar ao Drive</option></select>
+            <label for="query">O que você procura?</label>
+            <input class="search-input" id="query" name="query" maxlength="500" required autocomplete="off" placeholder="Ex.: mulheres e direito fundamental" aria-describedby="queryHint" />
+            <p class="hint" id="queryHint">Use aspas para frases exatas. Os operadores seguem as regras do portal do STF.</p>
           </div>
-          <p class="message" id="formMessage" role="status"></p>
-          <button class="primary" id="startCollection" type="submit">Iniciar coleta</button>
+
+          <fieldset>
+            <legend>Tipo de documento</legend>
+            <div class="type-list" id="contentTypes"></div>
+            <p class="hint" style="margin-top: 8px">Os PDFs de acórdãos podem exigir download manual por causa da verificação anti-robô do STF.</p>
+          </fieldset>
+
+          <fieldset class="period">
+            <legend>Período de publicação <span class="optional">(opcional)</span></legend>
+            <div class="row-2">
+              <div class="field"><label for="dateFrom">De</label><input id="dateFrom" name="date_from" type="date" /></div>
+              <div class="field"><label for="dateTo">Até</label><input id="dateTo" name="date_to" type="date" /></div>
+            </div>
+            <p class="hint">Sem datas, a pesquisa considera todo o acervo do portal e pode demorar mais.</p>
+          </fieldset>
+
+          <div class="field">
+            <label for="processClass">Classe processual <span class="optional">(opcional)</span></label>
+            <input id="processClass" name="process_class" maxlength="80" autocomplete="off" placeholder="Ex.: RE, ADI, HC" />
+          </div>
+
+          <div class="field" id="driveField" hidden>
+            <label for="driveFolder">Enviar também para o Google Drive</label>
+            <select id="driveFolder" name="drive_folder_id"><option value="">Não enviar</option></select>
+          </div>
+
+          <div class="save-location" aria-labelledby="saveLabel">
+            <div class="save-row">
+              <span class="label" id="saveLabel">Salvar em</span>
+              <span class="badge" id="folderDefault" hidden>padrão</span>
+            </div>
+            <div class="save-row" id="folderView">
+              <span class="path" id="folderPathText" title=""><bdi>…</bdi></span>
+              <button class="ghost" id="openFolder" type="button">Abrir</button>
+              <button class="ghost" id="editFolder" type="button" aria-expanded="false" aria-controls="folderEditor">Alterar</button>
+            </div>
+            <div class="folder-editor" id="folderEditor" hidden>
+              <label class="label" for="folderPath">Caminho completo da pasta</label>
+              <input class="path-input" id="folderPath" maxlength="1000" spellcheck="false" autocomplete="off" placeholder="Ex.: C:\Users\voce\Documents\STF" />
+              <p class="hint">Se a pasta não existir, ela será criada. Os PDFs já baixados continuam onde estão.</p>
+              <div class="button-row">
+                <button class="small" id="saveFolder" type="button">Salvar pasta</button>
+                <button class="secondary small" id="cancelFolder" type="button">Cancelar</button>
+                <button class="ghost" id="resetFolder" type="button" hidden>Voltar à pasta padrão</button>
+              </div>
+            </div>
+            <p class="message" id="folderMessage" role="status"></p>
+          </div>
+
+          <p class="message" id="formMessage" role="alert"></p>
+          <button class="btn-primary" id="startCollection" type="submit">Iniciar coleta</button>
         </form>
       </section>
 
-      <section aria-labelledby="progressHeading">
-        <div class="section-head"><h2 id="progressHeading">Execução</h2><button class="secondary" id="resumeCollection" type="button" hidden>Retomar</button></div>
-        <div class="field">
-          <label for="jobHistory">Coletas recentes</label>
-          <select id="jobHistory"><option value="">Nenhuma coleta</option></select>
-        </div>
-        <div class="status-panel">
-          <div class="status-line"><span class="status-label" id="jobStatus">Nenhuma coleta selecionada</span><span class="status-pill" id="jobId">Aguardando</span></div>
-          <div class="progress-track" role="progressbar" aria-label="Progresso da coleta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-value" id="progressValue"></div></div>
-          <div class="progress-caption"><span id="progressCaption">0 de 0 documentos baixados</span><span id="progressPercent">0%</span></div>
-          <div class="current-item" id="currentItem" aria-live="polite"></div>
-        </div>
-        <div class="metrics" aria-label="Resumo da execução">
-          <div class="metric"><strong id="countFound">0</strong><span>Encontrados</span></div>
-          <div class="metric"><strong id="countDownloaded">0</strong><span>Baixados</span></div>
-          <div class="metric"><strong id="countUploaded">0</strong><span>Enviados</span></div>
-          <div class="metric"><strong id="countDuplicates">0</strong><span>Duplicados</span></div>
-          <div class="metric"><strong id="countErrors">0</strong><span>Erros</span></div>
-        </div>
-        <div class="section-head"><h3>Registro</h3><button class="secondary" id="refreshJobs" type="button">Atualizar</button></div>
-        <ul class="log-list" id="eventList" aria-live="polite"></ul>
-      </section>
+      <div class="stack">
+        <!-- 2. Selected collection -->
+        <section class="card" aria-labelledby="jobHeading" aria-live="polite">
+          <div class="card-head">
+            <div style="min-width: 0">
+              <h2 id="jobHeading">Acompanhamento</h2>
+              <div class="job-meta" id="jobMeta" hidden>
+                <span class="status" id="jobStatus"></span>
+                <span id="jobWhen"></span>
+                <span id="jobTypes"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-state" id="jobEmpty">
+            <strong>Nenhuma coleta aberta</strong>
+            Faça uma pesquisa ao lado ou escolha uma coleta no histórico.
+          </div>
+
+          <div id="jobBody" hidden>
+            <div class="progress-track" role="progressbar" aria-label="Documentos processados" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-value" id="progressValue"></div></div>
+            <div class="progress-caption"><span id="progressCaption"></span><span id="progressPercent">0%</span></div>
+            <p class="current-item" id="currentItem"></p>
+            <div class="alert" id="jobError" role="alert" hidden></div>
+
+            <div class="metrics" aria-label="Resumo da coleta">
+              <div class="metric"><strong id="countFound">0</strong><span>Encontrados</span></div>
+              <div class="metric" id="downloadedMetric"><strong id="countDownloaded">0</strong><span>Baixados</span></div>
+              <div class="metric"><strong id="countUploaded">0</strong><span>No Drive</span></div>
+              <div class="metric"><strong id="countDuplicates">0</strong><span>Repetidos</span></div>
+              <div class="metric" id="errorsMetric"><strong id="countErrors">0</strong><span>Erros</span></div>
+            </div>
+
+            <div class="job-actions">
+              <button id="resumeCollection" type="button" hidden>Retomar coleta</button>
+              <button class="secondary" id="openFolderFromJob" type="button">Abrir pasta dos PDFs</button>
+            </div>
+
+            <details class="log" id="logDetails" open>
+              <summary><span>Registro da coleta <span class="optional" id="logCount"></span></span></summary>
+              <ul class="log-list" id="eventList"></ul>
+            </details>
+          </div>
+        </section>
+
+        <!-- 3. History -->
+        <section class="card" aria-labelledby="historyHeading">
+          <div class="card-head">
+            <div>
+              <h2 id="historyHeading">Histórico</h2>
+              <p class="subtitle">Clique em uma coleta para ver os detalhes.</p>
+            </div>
+            <button class="secondary small" id="refreshJobs" type="button">Atualizar</button>
+          </div>
+          <ul class="history" id="jobHistory"></ul>
+          <p class="empty-state" id="historyEmpty" hidden>Nenhuma coleta ainda.</p>
+        </section>
+      </div>
     </main>
+
     <script>
-      const form = document.querySelector("#collectionForm");
-      const contentTypes = document.querySelector("#contentTypes");
-      const driveFolder = document.querySelector("#driveFolder");
-      const formMessage = document.querySelector("#formMessage");
-      const startButton = document.querySelector("#startCollection");
-      const resumeButton = document.querySelector("#resumeCollection");
-      const jobHistory = document.querySelector("#jobHistory");
-      const driveStatus = document.querySelector("#driveStatus");
-      const labels = new Map();
-      let currentJobId = null;
-      let pollTimer = null;
+      const $ = (id) => document.getElementById(id);
+      const ACTIVE = new Set(["queued", "running"]);
+      const STATUS_NAMES = {
+        queued: "Na fila",
+        running: "Em execução",
+        completed: "Concluída",
+        completed_with_errors: "Concluída com erros",
+        interrupted: "Interrompida",
+      };
+      const TYPE_HELP = {
+        acordaos: "Decisões colegiadas, de turma ou plenário",
+        decisoes_monocraticas: "Decisões de um único ministro",
+      };
+      const dateTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
-      function showMessage(message, isError = false) {
-        formMessage.textContent = message;
-        formMessage.classList.toggle("error", isError);
-      }
+      const state = { labels: new Map(), jobs: [], currentId: null, eventsKey: null, pollTimer: null };
 
+      // ---------- Helpers ----------
       async function api(path, options = {}) {
         const response = await fetch(path, {
           ...options,
           headers: { "Content-Type": "application/json", ...(options.headers || {}) },
         });
         const result = response.status === 204 ? null : await response.json();
-        if (!response.ok) throw new Error(result?.detail || `Erro HTTP ${response.status}`);
+        if (!response.ok) {
+          const detail = Array.isArray(result?.detail) ? result.detail.map((item) => item.msg).join(" ") : result?.detail;
+          throw new Error(detail || `Erro HTTP ${response.status}`);
+        }
         return result;
       }
 
+      function say(target, text, kind = "") {
+        target.textContent = text;
+        target.className = `message${kind ? ` is-${kind}` : ""}`;
+        window.clearTimeout(target.clearTimer);
+        // Confirmations fade out; warnings and errors stay until the user acts.
+        if (kind === "ok") target.clearTimer = window.setTimeout(() => say(target, ""), 6000);
+      }
+
+      const statusName = (status) => STATUS_NAMES[status] || status;
+      const typeNames = (types) => types.map((type) => state.labels.get(type) || type).join(" + ");
+
+      // ---------- Content types ----------
       async function loadContentTypes() {
         const types = await api("/api/content-types");
-        contentTypes.replaceChildren();
-        for (const [index, item] of types.entries()) {
-          labels.set(item.id, item.label);
+        const options = types.map((item, index) => {
+          state.labels.set(item.id, item.label);
           const label = document.createElement("label");
           label.className = "type-option";
-          const input = document.createElement("input");
-          input.type = "checkbox";
-          input.name = "content_type";
-          input.value = item.id;
-          input.checked = index === 0;
-          label.append(input, document.createTextNode(item.label));
-          contentTypes.append(label);
-        }
+          const input = Object.assign(document.createElement("input"), { type: "checkbox", name: "content_type", value: item.id, checked: index === 0 });
+          const title = Object.assign(document.createElement("strong"), { textContent: item.label });
+          const help = Object.assign(document.createElement("span"), { textContent: TYPE_HELP[item.id] || "" });
+          label.append(input, title, help);
+          return label;
+        });
+        $("contentTypes").replaceChildren(...options);
       }
 
+      // ---------- Google Drive ----------
       async function refreshDrive() {
         const status = await api("/api/drive/status");
-        driveStatus.textContent = status.authorized ? "Google Drive conectado" : "Google Drive desconectado";
+        $("driveStatus").textContent = status.authorized ? "Drive conectado" : "Drive desconectado";
+        $("driveStatus").classList.toggle("is-on", status.authorized);
+        $("connectDrive").textContent = status.authorized ? "Reconectar" : "Conectar Drive";
+        $("driveField").hidden = !status.authorized;
         if (!status.authorized) return;
         const folders = await api("/api/drive/folders");
-        const selected = driveFolder.value;
-        driveFolder.replaceChildren(new Option("Não enviar ao Drive", ""));
-        for (const folder of folders) driveFolder.add(new Option(folder.name, folder.id));
-        if (selected) driveFolder.value = selected;
+        const selected = $("driveFolder").value;
+        $("driveFolder").replaceChildren(new Option("Não enviar", ""), ...folders.map((folder) => new Option(folder.name, folder.id)));
+        $("driveFolder").value = selected;
       }
 
-      function setStatusLabel(status) {
-        const names = {
-          queued: "Na fila",
-          running: "Em execução",
-          completed: "Concluída",
-          completed_with_errors: "Concluída com erros",
-          interrupted: "Interrompida",
-        };
-        return names[status] || status;
-      }
-
-      function renderJob(job) {
-        document.querySelector("#jobStatus").textContent = setStatusLabel(job.status);
-        document.querySelector("#jobId").textContent = job.id.slice(0, 8);
-        document.querySelector("#countFound").textContent = job.found;
-        document.querySelector("#countDownloaded").textContent = job.downloaded;
-        document.querySelector("#countUploaded").textContent = job.uploaded;
-        document.querySelector("#countDuplicates").textContent = job.duplicates;
-        document.querySelector("#countErrors").textContent = job.errors;
-        document.querySelector("#currentItem").textContent = job.current_item || job.error || "";
-        const percent = job.found ? Math.min(100, Math.round(job.downloaded * 100 / job.found)) : 0;
-        document.querySelector("#progressValue").style.width = `${percent}%`;
-        document.querySelector("#progressPercent").textContent = `${percent}%`;
-        document.querySelector("#progressCaption").textContent = `${job.downloaded} de ${job.found} documentos baixados`;
-        document.querySelector("[role=progressbar]").setAttribute("aria-valuenow", String(percent));
-        resumeButton.hidden = !["interrupted", "completed_with_errors"].includes(job.status);
-        const active = ["queued", "running"].includes(job.status);
-        startButton.disabled = active;
-        if (active) schedulePoll();
-      }
-
-      async function refreshEvents() {
-        if (!currentJobId) return;
-        const events = await api(`/api/jobs/${currentJobId}/events?limit=100`);
-        const list = document.querySelector("#eventList");
-        list.replaceChildren();
-        for (const event of events) {
-          const item = document.createElement("li");
-          const time = document.createElement("time");
-          time.dateTime = event.created_at;
-          time.textContent = new Date(event.created_at).toLocaleString("pt-BR");
-          const message = document.createElement("span");
-          message.textContent = event.message;
-          if (event.level === "error") message.className = "error";
-          item.append(time, message);
-          list.append(item);
-        }
-      }
-
-      async function pollJob() {
-        if (!currentJobId) return;
+      $("connectDrive").addEventListener("click", async () => {
         try {
-          const job = await api(`/api/jobs/${currentJobId}`);
-          renderJob(job);
-          await refreshEvents();
+          const result = await api("/api/drive/auth/url");
+          window.open(result.authorization_url, "_blank", "noopener,noreferrer");
+          say($("formMessage"), "Conclua a autorização do Google na nova janela e depois clique em Atualizar no histórico.");
         } catch (error) {
-          showMessage(error.message, true);
+          say($("formMessage"), error.message, "error");
+        }
+      });
+
+      // ---------- Save location ----------
+      function renderFolder(info) {
+        const text = $("folderPathText");
+        text.firstElementChild.textContent = info.path;
+        text.title = info.path;
+        $("folderPath").value = info.path;
+        $("folderDefault").hidden = !info.is_default;
+        $("resetFolder").hidden = info.is_default;
+      }
+
+      function toggleFolderEditor(open) {
+        $("folderEditor").hidden = !open;
+        $("folderView").hidden = open;
+        $("editFolder").setAttribute("aria-expanded", String(open));
+        if (open) $("folderPath").focus();
+        else $("editFolder").focus();
+      }
+
+      async function saveFolder(path, successText) {
+        try {
+          renderFolder(await api("/api/downloads-folder", { method: "PUT", body: JSON.stringify({ path }) }));
+          toggleFolderEditor(false);
+          say($("folderMessage"), successText, "ok");
+        } catch (error) {
+          $("folderPath").setAttribute("aria-invalid", "true");
+          say($("folderMessage"), error.message, "error");
         }
       }
 
-      async function refreshJobHistory() {
-        const jobs = await api("/api/jobs?limit=50");
-        jobHistory.replaceChildren(new Option("Selecione uma coleta", ""));
-        for (const job of jobs) {
-          const date = new Date(job.created_at).toLocaleString("pt-BR");
-          const summary = job.query || job.content_types.map((type) => labels.get(type) || type).join(", ");
-          const option = new Option(`${date} · ${setStatusLabel(job.status)} · ${summary}`, job.id);
-          jobHistory.add(option);
+      async function openFolder(messageTarget) {
+        try {
+          await api("/api/downloads-folder/open", { method: "POST" });
+          say(messageTarget, "A pasta foi aberta no seu computador.", "ok");
+        } catch (error) {
+          say(messageTarget, error.message, "error");
         }
-        if (currentJobId) jobHistory.value = currentJobId;
       }
 
-      function schedulePoll() {
-        if (pollTimer) return;
-        pollTimer = window.setTimeout(async () => {
-          pollTimer = null;
-          await pollJob();
-        }, 1500);
+      $("editFolder").addEventListener("click", () => { say($("folderMessage"), ""); toggleFolderEditor(true); });
+      $("cancelFolder").addEventListener("click", () => { $("folderPath").value = $("folderPathText").title; $("folderPath").removeAttribute("aria-invalid"); say($("folderMessage"), ""); toggleFolderEditor(false); });
+      $("saveFolder").addEventListener("click", () => saveFolder($("folderPath").value, "Pasta salva. Os próximos PDFs irão para ela."));
+      $("resetFolder").addEventListener("click", () => saveFolder("", "Voltamos a usar a pasta padrão."));
+      $("folderPath").addEventListener("input", () => $("folderPath").removeAttribute("aria-invalid"));
+      $("folderPath").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") { event.preventDefault(); $("saveFolder").click(); }
+        if (event.key === "Escape") $("cancelFolder").click();
+      });
+      $("openFolder").addEventListener("click", () => openFolder($("folderMessage")));
+      $("openFolderFromJob").addEventListener("click", () => openFolder($("formMessage")));
+
+      // ---------- Period: prevent an inverted range ----------
+      $("dateFrom").addEventListener("change", () => { $("dateTo").min = $("dateFrom").value; });
+      $("dateTo").addEventListener("change", () => { $("dateFrom").max = $("dateTo").value; });
+
+      // ---------- History ----------
+      function renderHistory() {
+        $("historyEmpty").hidden = state.jobs.length > 0;
+        $("jobHistory").replaceChildren(...state.jobs.map((job) => {
+          const item = document.createElement("li");
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.id = job.id;
+          if (job.id === state.currentId) button.setAttribute("aria-current", "true");
+          const query = Object.assign(document.createElement("span"), { className: "q", textContent: job.query || typeNames(job.content_types) });
+          const status = Object.assign(document.createElement("span"), { className: "status", textContent: statusName(job.status) });
+          status.dataset.status = job.status;
+          const when = Object.assign(document.createElement("span"), {
+            className: "when",
+            textContent: `${dateTime.format(new Date(job.created_at))} · ${job.downloaded} de ${job.found} baixados`,
+          });
+          button.append(query, status, when);
+          item.append(button);
+          return item;
+        }));
       }
 
-      form.addEventListener("submit", async (event) => {
+      $("jobHistory").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-id]");
+        if (button) selectJob(button.dataset.id);
+      });
+
+      // ---------- Selected job ----------
+      function renderJob(job) {
+        $("jobEmpty").hidden = true;
+        $("jobBody").hidden = false;
+        $("jobMeta").hidden = false;
+        $("jobHeading").textContent = job.query || typeNames(job.content_types);
+        $("jobStatus").textContent = statusName(job.status);
+        $("jobStatus").dataset.status = job.status;
+        $("jobWhen").textContent = dateTime.format(new Date(job.created_at));
+        $("jobTypes").textContent = typeNames(job.content_types);
+
+        for (const [id, value] of [["countFound", job.found], ["countDownloaded", job.downloaded], ["countUploaded", job.uploaded], ["countDuplicates", job.duplicates], ["countErrors", job.errors]]) {
+          $(id).textContent = value;
+        }
+        $("errorsMetric").classList.toggle("is-bad", job.errors > 0);
+        $("downloadedMetric").classList.toggle("is-good", job.downloaded > 0);
+
+        const done = job.downloaded + job.duplicates + job.errors;
+        const percent = job.found ? Math.min(100, Math.round(done * 100 / job.found)) : (ACTIVE.has(job.status) ? 0 : 100);
+        $("progressValue").style.width = `${percent}%`;
+        $("progressPercent").textContent = `${percent}%`;
+        const track = document.querySelector("[role=progressbar]");
+        track.setAttribute("aria-valuenow", String(percent));
+        track.dataset.status = job.status;
+        $("progressCaption").textContent = ACTIVE.has(job.status)
+          ? (job.found ? `${done} de ${job.found} documentos processados` : "Pesquisando no portal do STF…")
+          : `${job.downloaded} de ${job.found} PDFs baixados`;
+        $("currentItem").textContent = job.status === "running" && job.current_item ? `Agora: ${job.current_item}` : "";
+        $("jobError").hidden = !job.error;
+        $("jobError").textContent = job.error || "";
+        $("resumeCollection").hidden = !["interrupted", "completed_with_errors"].includes(job.status);
+      }
+
+      async function refreshEvents(job) {
+        const key = `${job.id}:${job.updated_at}`;
+        if (key === state.eventsKey) return; // nothing changed since the last render
+        state.eventsKey = key;
+        const events = await api(`/api/jobs/${job.id}/events?limit=200`);
+        const list = $("eventList");
+        const stickToBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+        list.replaceChildren(...events.map((event) => {
+          const item = Object.assign(document.createElement("li"), { className: `log-${event.level}` });
+          const time = Object.assign(document.createElement("time"), { dateTime: event.created_at, textContent: dateTime.format(new Date(event.created_at)) });
+          item.append(time, Object.assign(document.createElement("span"), { textContent: event.message }));
+          return item;
+        }));
+        $("logCount").textContent = `(${events.length})`;
+        if (stickToBottom) list.scrollTop = list.scrollHeight;
+      }
+
+      async function selectJob(id) {
+        state.currentId = id;
+        state.eventsKey = null;
+        renderHistory();
+        await refresh();
+      }
+
+      // One loop refreshes the history and the open job; it only keeps running while something is active.
+      async function refresh() {
+        window.clearTimeout(state.pollTimer);
+        try {
+          state.jobs = await api("/api/jobs?limit=50");
+          renderHistory();
+          let job = state.jobs.find((item) => item.id === state.currentId);
+          if (state.currentId && !job) job = await api(`/api/jobs/${state.currentId}`);
+          if (job) {
+            renderJob(job);
+            await refreshEvents(job);
+          }
+        } catch (error) {
+          say($("formMessage"), error.message, "error");
+        }
+        if (state.jobs.some((item) => ACTIVE.has(item.status))) {
+          state.pollTimer = window.setTimeout(refresh, 2000);
+        }
+      }
+
+      $("refreshJobs").addEventListener("click", () => {
+        state.eventsKey = null;
+        Promise.all([refresh(), refreshDrive()]).catch((error) => say($("formMessage"), error.message, "error"));
+      });
+
+      $("resumeCollection").addEventListener("click", async () => {
+        $("resumeCollection").disabled = true;
+        try {
+          await api(`/api/jobs/${state.currentId}/resume`, { method: "POST" });
+          await refresh();
+        } catch (error) {
+          say($("formMessage"), error.message, "error");
+        } finally {
+          $("resumeCollection").disabled = false;
+        }
+      });
+
+      // ---------- New collection ----------
+      $("query").addEventListener("input", () => $("query").removeAttribute("aria-invalid"));
+
+      $("collectionForm").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const selectedTypes = [...form.querySelectorAll("input[name=content_type]:checked")].map((input) => input.value);
-        if (!selectedTypes.length) return showMessage("Selecione ao menos um tipo de conteúdo.", true);
-        if (!form.query.value.trim()) {
-          return showMessage("Informe palavras-chave para a pesquisa.", true);
+        const form = event.currentTarget;
+        const types = [...form.querySelectorAll("input[name=content_type]:checked")].map((input) => input.value);
+        const query = $("query").value.trim();
+        if (!query) {
+          $("query").setAttribute("aria-invalid", "true");
+          $("query").focus();
+          return say($("formMessage"), "Digite ao menos uma palavra-chave para pesquisar.", "error");
         }
-        startButton.disabled = true;
-        showMessage("");
+        if (!types.length) return say($("formMessage"), "Marque pelo menos um tipo de documento.", "error");
+        if ($("dateFrom").value && $("dateTo").value && $("dateFrom").value > $("dateTo").value) {
+          return say($("formMessage"), "A data inicial precisa ser anterior ou igual à data final.", "error");
+        }
+
+        $("startCollection").disabled = true;
+        $("startCollection").textContent = "Iniciando…";
+        say($("formMessage"), "");
         try {
           const job = await api("/api/jobs", {
             method: "POST",
             body: JSON.stringify({
-              content_types: selectedTypes,
-              date_from: form.date_from.value || null,
-              date_to: form.date_to.value || null,
-              query: form.query.value.trim() || null,
-              process_class: form.process_class.value.trim() || null,
-              drive_folder_id: driveFolder.value || null,
+              content_types: types,
+              query,
+              date_from: $("dateFrom").value || null,
+              date_to: $("dateTo").value || null,
+              process_class: $("processClass").value.trim() || null,
+              drive_folder_id: $("driveFolder").value || null,
             }),
           });
-          currentJobId = job.id;
-          renderJob(job);
-          await refreshJobHistory();
-          await refreshEvents();
+          const queued = state.jobs.some((item) => ACTIVE.has(item.status));
+          say($("formMessage"), queued ? "Coleta adicionada à fila. Ela começa quando a atual terminar." : "Coleta iniciada.", "ok");
+          await selectJob(job.id);
+          if (window.matchMedia("(max-width: 940px)").matches) $("jobHeading").scrollIntoView({ behavior: "smooth" });
         } catch (error) {
-          showMessage(error.message, true);
-          startButton.disabled = false;
-        }
-      });
-
-      resumeButton.addEventListener("click", async () => {
-        if (!currentJobId) return;
-        resumeButton.disabled = true;
-        try {
-          const job = await api(`/api/jobs/${currentJobId}/resume`, { method: "POST" });
-          renderJob(job);
-          await refreshJobHistory();
-          await refreshEvents();
-        } catch (error) {
-          showMessage(error.message, true);
+          say($("formMessage"), error.message, "error");
         } finally {
-          resumeButton.disabled = false;
+          $("startCollection").disabled = false;
+          $("startCollection").textContent = "Iniciar coleta";
         }
       });
 
-      document.querySelector("#connectDrive").addEventListener("click", async () => {
-        try {
-          const result = await api("/api/drive/auth/url");
-          window.open(result.authorization_url, "_blank", "noopener,noreferrer");
-          showMessage("Conclua a autorização Google na nova janela e atualize as pastas.");
-        } catch (error) {
-          showMessage(error.message, true);
-        }
-      });
-
-      document.querySelector("#refreshJobs").addEventListener("click", async () => {
-        if (currentJobId) await pollJob();
-        await Promise.all([refreshDrive(), refreshJobHistory()]).catch((error) => showMessage(error.message, true));
-      });
-
-      jobHistory.addEventListener("change", async () => {
-        currentJobId = jobHistory.value || null;
-        if (currentJobId) await pollJob();
-      });
-
-      Promise.all([loadContentTypes(), refreshDrive(), refreshJobHistory()]).catch((error) => showMessage(error.message, true));
+      // ---------- Start ----------
+      // Independent loads: a Drive failure must not hide the history or the save folder.
+      const showError = (error) => say($("formMessage"), error.message, "error");
+      loadContentTypes().then(refresh).catch(showError);
+      api("/api/downloads-folder").then(renderFolder).catch(showError);
+      refreshDrive().catch(showError);
     </script>
   </body>
 </html>

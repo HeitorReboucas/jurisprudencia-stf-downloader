@@ -123,6 +123,17 @@ data/
 
 As pastas por ano aparecem conforme os documentos são encontrados. O banco `jurisprudencias.sqlite3` guarda o histórico das coletas, os filtros, os contadores e os dados dos documentos. Não apague esse arquivo se quiser manter o histórico e a possibilidade de retomar jobs.
 
+### Abrir a pasta ou salvar em outro lugar
+
+O cartão **Pasta dos PDFs**, na tela do coletor, mostra onde os documentos estão sendo salvos:
+
+- **Abrir pasta** abre essa pasta no seu computador.
+- Para salvar em outro lugar, cole o caminho completo da nova pasta (por exemplo `C:\Users\voce\Documents\STF`) e clique em **Salvar pasta**. Se ela não existir, o programa a cria.
+- Os próximos PDFs vão para a nova pasta; os que já foram baixados continuam onde estavam.
+- **Usar pasta padrão** volta para `data/downloads`.
+
+A escolha fica salva no banco local e continua valendo depois de fechar o programa. O banco e o token do Drive continuam em `data`.
+
 Se o envio ao Drive falhar, um PDF já baixado continua salvo no computador. Os arquivos e o histórico não são enviados ao GitHub.
 
 ## Usar o Google Drive (opcional)
@@ -237,6 +248,9 @@ Principais endereços da API:
 | `POST /api/jobs/{job_id}/resume` | Retoma uma coleta interrompida ou com erros. |
 | `GET /api/documents` | Lista documentos salvos no catálogo local. |
 | `POST /api/documents/{document_id}/upload` | Envia novamente um PDF local ao Drive. |
+| `GET /api/downloads-folder` | Mostra a pasta onde os PDFs são salvos. |
+| `PUT /api/downloads-folder` | Muda essa pasta (`{"path": ""}` volta à padrão). |
+| `POST /api/downloads-folder/open` | Abre a pasta no computador. |
 | `GET /api/drive/status` | Verifica a configuração do Drive. |
 | `GET /api/drive/auth/url` | Inicia a autorização do Drive. |
 | `GET /api/drive/folders` | Lista pastas disponíveis no Drive. |
@@ -247,7 +261,7 @@ Normalmente não é necessário alterar estas opções. Se precisar, crie ou edi
 
 | Opção | Valor inicial | Explicação simples |
 | --- | --- | --- |
-| `DATA_DIR` | `data` | Onde guardar o banco, os PDFs e o token do Drive. |
+| `DATA_DIR` | `data` | Onde guardar o banco, o token do Drive e, se nenhuma outra pasta for escolhida na tela, os PDFs. |
 | `STF_TIMEOUT_SECONDS` | `90` | Tempo máximo para abrir o portal e receber a resposta da pesquisa. |
 | `STF_REQUEST_DELAY_SECONDS` | `1.0` | Pausa mínima entre pesquisas no STF. Não pode ser menor que 1 segundo. |
 | `STF_MAX_ATTEMPTS` | `3` | Número de tentativas para downloads de PDF com falhas temporárias. |

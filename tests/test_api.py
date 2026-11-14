@@ -166,3 +166,29 @@ def test_api_lists_documents_and_returns_not_found_for_unknown_upload(
     assert len(documents.json()) == 1
     assert documents.json()[0]["document_key"] == "acordaos:sjur9"
     assert unknown.status_code == 404
+
+def test_api_changes_and_resets_downloads_folder(tmp_path, monkeypatch) -> None:
+    from app.collector import Collector
+    from app.config import Settings
+
+    database = Database(tmp_path / "state.sqlite3")
+    monkeypatch.setattr(main, "database", database)
+    monkeypatch.setattr(
+        main, "collector", Collector(database, Settings(_env_file=None, data_dir=tmp_path))
+    )
+    chosen = tmp_path / "meus PDFs" / "STF"
+
+    with TestClient(main.app) as client:
+        default = client.get("/api/downloads-folder").json()
+        relative = client.put("/api/downloads-folder", json={"path": "pasta/relativa"})
+        changed = client.put("/api/downloads-folder", json={"path": str(chosen)})
+        reloaded = client.get("/api/downloads-folder").json()
+        reset = client.put("/api/downloads-folder", json={"path": "  "}).json()
+
+    assert default["is_default"] is True
+    assert relative.status_code == 400
+    assert changed.status_code == 200
+    assert chosen.is_dir()
+    assert reloaded == {"path": str(chosen.resolve()), "is_default": False}
+    assert reset["is_default"] is True
+    assert reset["path"] == default["path"]

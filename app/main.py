@@ -1,10 +1,13 @@
+import os
+import subprocess
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from app.collector import Collector, serialize_job
@@ -45,9 +48,15 @@ class UploadRequest(BaseModel):
     drive_folder_id: str = Field(min_length=1, max_length=300)
 
 
+class DownloadsFolderRequest(BaseModel):
+    # Empty path = back to the default folder inside DATA_DIR.
+    path: str = Field(default="", max_length=1000)
+
+
 @app.get("/", include_in_schema=False)
 def index() -> FileResponse:
-    return FileResponse(static_dir / "index.html")
+    # no-cache: browsers must revalidate, or they keep showing an outdated interface after updates.
+    return FileResponse(static_dir / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/api/health", tags=["Sistema"])
@@ -143,6 +152,59 @@ def upload_document(document_id: int, request: UploadRequest) -> dict[str, objec
         raise HTTPException(status_code=409, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=502, detail=f"Falha no envio ao Drive: {error}") from error
+
+
+def downloads_folder_info() -> dict[str, object]:
+    return {
+        "path": str(collector.downloads_dir().resolve()),
+        "is_default": database.get_setting("downloads_dir") is None,
+    }
+
+
+@app.get("/api/downloads-folder", tags=["Documentos"])
+def get_downloads_folder() -> dict[str, object]:
+    return downloads_folder_info()
+
+
+@app.put("/api/downloads-folder", tags=["Documentos"])
+def set_downloads_folder(request: DownloadsFolderRequest) -> dict[str, object]:
+    raw_path = request.path.strip()
+    if not raw_path:
+        database.set_setting("downloads_dir", None)
+        return downloads_folder_info()
+
+    folder = Path(raw_path).expanduser()
+    if not folder.is_absolute():
+        raise HTTPException(
+            status_code=400,
+            detail="Informe o caminho completo da pasta, por exemplo C:\\Users\\voce\\Documents\\STF.",
+        )
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        probe = folder / ".coletor-stf-teste-de-escrita"
+        probe.write_bytes(b"")
+        probe.unlink()
+    except OSError as error:
+        raise HTTPException(
+            status_code=400, detail=f"Não foi possível salvar arquivos nessa pasta: {error}"
+        ) from error
+    database.set_setting("downloads_dir", str(folder.resolve()))
+    return downloads_folder_info()
+
+
+@app.post("/api/downloads-folder/open", status_code=204, tags=["Documentos"])
+def open_downloads_folder() -> Response:
+    # The server runs on the user's own computer, so the folder opens there.
+    folder = collector.downloads_dir()
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        if sys.platform == "win32":
+            os.startfile(folder)
+        else:
+            subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(folder)])
+    except OSError as error:
+        raise HTTPException(status_code=500, detail=f"Não foi possível abrir a pasta: {error}") from error
+    return Response(status_code=204)
 
 
 @app.get("/api/drive/status", tags=["Google Drive"])
