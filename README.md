@@ -12,89 +12,45 @@ O programa roda no seu computador; não é necessário publicar um site ou contr
 
 ## Começar no Windows
 
-Estas instruções são para Windows 10 ou 11.
+Estas instruções são para Windows 10 ou 11. Não é preciso digitar comandos nem usar o VS Code.
 
-### 1. Baixar e abrir o projeto
+### 1. Baixar o programa
 
 1. Abra a página do [Projeto Jurisprudência STF no GitHub](https://github.com/HeitorReboucas/jurisprudencia-stf-downloader).
 2. Clique no botão verde **Code** e escolha **Download ZIP**.
-3. Quando o download terminar, clique com o botão direito no arquivo ZIP e escolha **Extrair Tudo**. Não execute o programa de dentro do ZIP.
-4. Abra o VS Code. Escolha **Arquivo > Abrir Pasta** e selecione a pasta `jurisprudencia-stf-downloader-main` que foi extraída.
-5. No VS Code, escolha **Terminal > Novo Terminal**. Os comandos abaixo devem ser digitados nesse terminal, dentro da pasta do projeto.
+3. Quando o download terminar, clique com o botão direito no arquivo ZIP e escolha **Extrair Tudo**. Não abra os arquivos de dentro do ZIP sem extrair.
+4. Abra a pasta `jurisprudencia-stf-downloader-main` que foi extraída.
 
-### 2. Instalar o Python
+### 2. Instalar (só na primeira vez)
 
-Instale o Python 3.12 ou uma versão mais recente pelo [site oficial do Python](https://www.python.org/downloads/). Depois da instalação, feche e abra novamente o VS Code.
+Dê dois cliques em **`Instalar.bat`**. Uma janela preta mostra o andamento, que pode levar alguns minutos. Quando aparecer **Pronto!**, aperte qualquer tecla para fechar.
 
-Para conferir se o Windows reconhece o Python, abra o terminal do VS Code em **Terminal > Novo Terminal** e execute:
+- Se o computador não tiver o Python, o instalador o instala sozinho. Se ele não conseguir, siga a mensagem da janela: instale o Python 3.12 ou mais recente pelo [site oficial](https://www.python.org/downloads/), marcando **Add python.exe to PATH**, e rode o `Instalar.bat` de novo.
+- Se o Windows mostrar **"O Windows protegeu o computador"**, clique em **Mais informações** e depois em **Executar assim mesmo**. O aviso aparece porque o arquivo foi baixado da internet.
+- Depois de baixar uma versão nova do projeto, rode o `Instalar.bat` outra vez.
 
-```powershell
-py -3 --version
-```
+### 3. Usar o programa
 
-Deve aparecer uma versão do Python. Se o comando `py` não for encontrado, instale o Python pelo site oficial e reinicie o VS Code.
+Dê dois cliques em **`Abrir Coletor.bat`**. A página do coletor abre sozinha no navegador.
 
-### 3. Preparar o projeto
+Deixe a janela preta aberta enquanto usar o programa; ela é o próprio coletor funcionando. **Para encerrar, feche essa janela.** Se fechar só o navegador, basta clicar em `Abrir Coletor.bat` de novo para voltar à página.
 
-No terminal, confirme que está na pasta `jurisprudencia-stf-downloader-main` e execute estes comandos, um de cada vez:
-
-```powershell
-py -3 -m venv .venv
-```
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-```
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-Esses comandos criam um ambiente Python separado para este projeto e instalam os componentes de que ele precisa. No Windows, o coletor usa o Microsoft Edge instalado para abrir a página oficial de pesquisa do STF. Faça essa preparação apenas na primeira vez ou depois de baixar uma cópia nova do projeto.
-
-Se não tiver Microsoft Edge, instale o Chromium controlado pelo Playwright e configure o canal usado pelo programa:
-
-```powershell
-.\.venv\Scripts\python.exe -m playwright install chromium
-```
-
-Depois, crie ou edite o arquivo `.env` na pasta do projeto e acrescente:
-
-```text
-STF_BROWSER_CHANNEL=chromium
-```
-
-Não é obrigatório ativar o ambiente com `Activate.ps1`; usar o caminho `.\.venv\Scripts\python.exe` evita problemas com as permissões do PowerShell.
-
-### 4. Abrir o programa
-
-Inicie o programa com:
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
-Deixe essa janela do terminal aberta enquanto estiver usando o programa. Quando aparecer uma mensagem indicando que o servidor está rodando, abra este endereço no navegador:
-
-**http://127.0.0.1:8000**
-
-Para encerrar, volte ao terminal e pressione **Ctrl+C**. O endereço é local: só funciona enquanto o programa estiver aberto neste computador.
+O endereço da página é `http://127.0.0.1:8000`. Ele só funciona neste computador e enquanto a janela estiver aberta. O programa usa o Microsoft Edge, que já vem no Windows, para consultar o portal do STF.
 
 ## Fazer uma pesquisa e baixar os PDFs
 
-Na página que abrir no navegador:
+Na página do coletor, no cartão **Nova pesquisa**:
 
-1. Em **Tipo de conteúdo**, marque **Acórdãos**, **Decisões monocráticas** ou os dois. A opção **Acórdãos** já vem selecionada. Súmulas e informativos não aparecem porque o portal do STF não oferece PDF de inteiro teor para eles.
-2. Digite os termos no campo **Palavras-chave**. Por exemplo: `mulheres e direito fundamental`.
-3. Se não quiser limitar por data, deixe **Data inicial** e **Data final** vazias. A pesquisa usará as datas disponíveis no portal.
-4. Se quiser limitar o período, informe uma data inicial, uma data final ou ambas. As datas se referem à **publicação** do documento.
-5. Se quiser, preencha **Classe processual**, como `RE`. Esse campo é opcional.
-6. Para guardar os PDFs somente neste computador, mantenha **Não enviar ao Drive** selecionado.
-7. Clique em **Iniciar coleta** e acompanhe o andamento na seção **Execução**.
+1. Em **O que você procura?**, digite os termos. Por exemplo: `mulheres e direito fundamental`. Esse campo é obrigatório.
+2. Em **Tipo de documento**, marque **Acórdãos**, **Decisões monocráticas** ou os dois. Súmulas e informativos não aparecem porque o portal do STF não oferece PDF de inteiro teor para eles.
+3. Se quiser limitar o período, preencha **De** e/ou **Até**. As datas se referem à **publicação** do documento. Deixe em branco para pesquisar todas as datas.
+4. Se quiser, preencha **Classe processual**, como `RE`. Esse campo é opcional.
+5. Confira em **Salvar em** a pasta onde os PDFs ficarão.
+6. Clique em **Iniciar coleta** e acompanhe o andamento no cartão **Acompanhamento**, à direita.
 
-As palavras-chave são obrigatórias: a pesquisa oficial do STF só é iniciada a partir delas. As datas e a classe processual apenas restringem os resultados. Uma consulta sem data pode encontrar muitos documentos e levar mais tempo.
+As datas e a classe processual apenas restringem os resultados. Uma consulta sem data pode encontrar muitos documentos e levar mais tempo. O programa envia a expressão ao mecanismo de pesquisa oficial do STF; portanto, os operadores e as aspas seguem as regras desse portal.
 
-Por padrão, o portal procura documentos que correspondam a todos os termos digitados. O programa envia a expressão ao mecanismo de pesquisa oficial do STF; portanto, os operadores e as aspas seguem as regras desse portal.
+Você pode iniciar outra coleta enquanto uma está em andamento: ela entra na fila e começa quando a anterior terminar.
 
 ### O que significam os contadores
 
@@ -102,11 +58,11 @@ Por padrão, o portal procura documentos que correspondam a todos os termos digi
 | --- | --- |
 | **Encontrados** | Documentos que apareceram nos resultados da pesquisa. |
 | **Baixados** | PDFs que foram salvos no computador. |
-| **Enviados** | PDFs enviados para o Google Drive, quando configurado. |
-| **Duplicados** | PDFs idênticos a outro arquivo já registrado. |
-| **Erros** | Documentos ou envios que precisam de atenção. Consulte o registro da execução. |
+| **No Drive** | PDFs enviados para o Google Drive, quando configurado. |
+| **Repetidos** | PDFs idênticos a outro arquivo já baixado. |
+| **Erros** | Documentos ou envios que precisam de atenção. Consulte o **Registro da coleta**. |
 
-O seletor **Coletas recentes** permite consultar uma execução anterior. Se uma coleta for interrompida, selecione-a e use **Retomar** depois de resolver ou aguardar a causa da interrupção. Coletas que ainda estavam na fila quando o programa foi fechado também aparecem como interrompidas e podem ser retomadas.
+O cartão **Histórico** lista as coletas anteriores; clique em uma para ver os detalhes. Se uma coleta for interrompida, selecione-a e clique em **Retomar coleta** depois de resolver ou aguardar a causa da interrupção. Coletas que ainda estavam na fila quando o programa foi fechado também aparecem como interrompidas e podem ser retomadas.
 
 ## Onde os arquivos ficam
 
@@ -125,12 +81,12 @@ As pastas por ano aparecem conforme os documentos são encontrados. O banco `jur
 
 ### Abrir a pasta ou salvar em outro lugar
 
-O cartão **Pasta dos PDFs**, na tela do coletor, mostra onde os documentos estão sendo salvos:
+O quadro **Salvar em**, no cartão **Nova pesquisa**, mostra onde os documentos estão sendo salvos:
 
-- **Abrir pasta** abre essa pasta no seu computador.
-- Para salvar em outro lugar, cole o caminho completo da nova pasta (por exemplo `C:\Users\voce\Documents\STF`) e clique em **Salvar pasta**. Se ela não existir, o programa a cria.
+- **Abrir** abre essa pasta no seu computador. O botão **Abrir pasta dos PDFs**, no acompanhamento, faz o mesmo.
+- Para salvar em outro lugar, clique em **Alterar**, cole o caminho completo da nova pasta (por exemplo `C:\Users\voce\Documents\STF`) e clique em **Salvar pasta**. Se ela não existir, o programa a cria.
 - Os próximos PDFs vão para a nova pasta; os que já foram baixados continuam onde estavam.
-- **Usar pasta padrão** volta para `data/downloads`.
+- **Voltar à pasta padrão** volta para `data/downloads`.
 
 A escolha fica salva no banco local e continua valendo depois de fechar o programa. O banco e o token do Drive continuam em `data`.
 
@@ -149,7 +105,7 @@ Para habilitar o Drive, é preciso criar credenciais de acesso no Google Cloud. 
 5. Em **URIs de redirecionamento autorizados**, adicione exatamente `http://localhost:8000/api/drive/oauth/callback`.
 6. Baixe o arquivo JSON de credenciais e coloque-o na pasta principal do projeto com o nome `credentials.json`.
 7. Com o programa rodando, clique em **Conectar Drive** e autorize o acesso no navegador.
-8. Volte à página do coletor, clique em **Atualizar** e escolha uma pasta do Drive.
+8. Volte à página do coletor e recarregue-a. Em **Enviar também para o Google Drive**, escolha uma pasta.
 9. Inicie uma coleta. O programa criará dentro da pasta escolhida uma estrutura `STF/tipo/ano`.
 
 O Google pode mostrar uma tela de aviso para aplicativos em teste; siga apenas se reconhecer o projeto e estiver usando suas próprias credenciais. O token de autorização fica em `data/google-token.json`. Não compartilhe nem publique `credentials.json` ou esse token. O projeto já ignora esses arquivos no Git.
@@ -162,17 +118,20 @@ Se o callback OAuth não funcionar, confirme que o programa está na porta 8000 
 
 ### A página não abre
 
-- Confira se o terminal ainda mostra o servidor em execução.
-- Abra exatamente `http://127.0.0.1:8000`.
-- Se aparecer que a porta está ocupada, outro programa já está usando a porta 8000. Encerre esse programa ou configure uma porta diferente; para usar o Drive, ajuste também o endereço de retorno OAuth.
+- Dê dois cliques em `Abrir Coletor.bat` de novo e espere alguns segundos.
+- Se a janela preta disser que o programa ainda não foi instalado, rode o `Instalar.bat` primeiro.
+- Se a janela mostrar um erro sobre a porta 8000, outro programa já está usando essa porta. Feche esse programa ou reinicie o computador e tente de novo.
+- Também é possível abrir manualmente `http://127.0.0.1:8000` no navegador, desde que a janela preta esteja aberta.
 
-### O comando `py` não funciona
+### A instalação não termina
 
-Instale o Python 3.12 ou mais recente pelo site oficial, feche e abra novamente o VS Code e tente `py -3 --version` outra vez. Confirme também que o terminal está aberto dentro da pasta do projeto.
+- Confira a conexão com a internet e rode o `Instalar.bat` de novo.
+- Se o Python não for instalado automaticamente, instale o Python 3.12 ou mais recente pelo [site oficial](https://www.python.org/downloads/), marcando **Add python.exe to PATH**, e rode o `Instalar.bat` outra vez.
+- Se o erro continuar, apague a pasta `.venv` dentro da pasta do projeto e rode o `Instalar.bat` novamente.
 
 ### A pesquisa terminou sem documentos
 
-Confira se selecionou o tipo de conteúdo correto, se os termos foram escritos como pretendido e se o período escolhido não exclui os resultados. As datas são de publicação, não necessariamente de julgamento. O portal do STF determina quais documentos correspondem aos termos.
+Confira se selecionou o tipo de documento correto, se os termos foram escritos como pretendido e se o período escolhido não exclui os resultados. As datas são de publicação, não necessariamente de julgamento. O portal do STF determina quais documentos correspondem aos termos.
 
 No Windows, confirme que o Microsoft Edge está instalado. No macOS e Linux, instale o navegador do Playwright uma vez:
 
@@ -184,13 +143,13 @@ No macOS e Linux, faça esse passo logo depois de instalar as dependências. Se 
 
 ### A coleta ficou como “Interrompida” e mostra HTTP 202
 
-O coletor abre a página oficial de pesquisa em um navegador e valida automaticamente o endereço da requisição, o formato da resposta e a origem dos links de PDF antes de processar documentos. Se a URL de pesquisa não iniciar a busca, ele tenta enviar as palavras pelo campo oficial do próprio portal. Em alguns momentos o STF ainda pode responder temporariamente sem resultados, inclusive por controles de tráfego. O programa registra a interrupção e não tenta contornar essa proteção. Aguarde um pouco e depois selecione a coleta em **Coletas recentes** e clique em **Retomar**.
+O coletor abre a página oficial de pesquisa em um navegador e valida automaticamente o endereço da requisição, o formato da resposta e a origem dos links de PDF antes de processar documentos. Se a URL de pesquisa não iniciar a busca, ele tenta enviar as palavras pelo campo oficial do próprio portal. Em alguns momentos o STF ainda pode responder temporariamente sem resultados, inclusive por controles de tráfego. O programa registra a interrupção e não tenta contornar essa proteção. Aguarde um pouco e depois selecione a coleta no **Histórico** e clique em **Retomar coleta**.
 
 Se o registro disser que os filtros de data e classe não puderam ser aplicados, o portal mudou o formato da pesquisa. O programa para a coleta em vez de baixar documentos fora do período ou da classe escolhidos. Nesse caso, o código de integração precisa ser atualizado.
 
 ### Um documento aparece como erro ou não foi baixado
 
-Nem todo resultado tem um arquivo de inteiro teor disponível para download. O coletor registra esse caso e continua com os outros documentos. Abra o registro da execução para ver a mensagem específica.
+Nem todo resultado tem um arquivo de inteiro teor disponível para download. O coletor registra esse caso e continua com os outros documentos. Abra o **Registro da coleta** para ver a mensagem específica.
 
 - **Verificação anti-robô:** o servidor de documentos do STF pode exigir uma verificação anti-robô antes de liberar o PDF, o que acontece com frequência nos acórdãos. O programa não contorna essa proteção; o registro indica o documento, que pode ser baixado manualmente pelo portal.
 
