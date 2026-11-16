@@ -9,7 +9,7 @@
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
 ![Plataforma](https://img.shields.io/badge/plataforma-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
-![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-blue)
+![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue)
 
 </div>
 
@@ -343,7 +343,8 @@ As opções abaixo podem ser definidas em um arquivo `.env` na pasta do projeto 
 ├── Abrir Coletor.bat    # inicializador para Windows
 ├── requirements.txt     # dependências Python
 ├── .env.example         # modelo de configuração
-└── LICENSE              # licença GPL-3.0
+├── CITATION.cff         # dados de citação
+└── LICENSE              # licença MIT
 ```
 
 ## 9. Validação e testes
@@ -446,7 +447,7 @@ Confira as credenciais, o endereço de retorno cadastrado no Google Cloud, a aut
 
 ## 13. Como citar
 
-Se este software contribuiu para a sua pesquisa, cite-o da seguinte forma:
+Se este software contribuiu para a sua pesquisa, cite-o da seguinte forma. O arquivo [CITATION.cff](CITATION.cff) também habilita o botão **Cite this repository** na página do projeto no GitHub.
 
 **ABNT (NBR 6023:2018)**
 
@@ -461,17 +462,21 @@ Se este software contribuiu para a sua pesquisa, cite-o da seguinte forma:
   version = {1.0.0},
   year    = {2026},
   url     = {https://github.com/HeitorReboucas/jurisprudencia-stf-downloader},
-  license = {GPL-3.0}
+  license = {MIT}
 }
 ```
 
 ## 14. Licença
 
-Este projeto é distribuído sob a **GNU General Public License v3.0**. Consulte o arquivo [LICENSE](LICENSE) para os termos completos. Os documentos coletados são de autoria e responsabilidade do Supremo Tribunal Federal.
+Este projeto é distribuído sob a **Licença MIT**: o código pode ser usado, modificado e redistribuído livremente, inclusive em outros projetos, desde que se mantenham o aviso de direitos autorais e o texto da licença. Consulte o arquivo [LICENSE](LICENSE) para os termos completos.
+
+A licença abrange apenas o código e a documentação deste repositório. Os documentos coletados são atos oficiais do Supremo Tribunal Federal e, nos termos do art. 8º, IV, da Lei nº 9.610/1998, não são objeto de proteção por direito autoral.
 
 ## 15. Referências
 
 BRASIL. [Constituição (1988)]. **Constituição da República Federativa do Brasil de 1988**. Brasília, DF: Presidência da República, 1988. Disponível em: https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm.
+
+BRASIL. **Lei nº 9.610, de 19 de fevereiro de 1998**. Altera, atualiza e consolida a legislação sobre direitos autorais. Brasília, DF: Presidência da República, 1998. Disponível em: https://www.planalto.gov.br/ccivil_03/leis/l9610.htm.
 
 BRASIL. **Lei nº 12.527, de 18 de novembro de 2011**. Regula o acesso a informações. Brasília, DF: Presidência da República, 2011. Disponível em: https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm.
 

@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "Se este software contribuiu para a sua pesquisa, cite-o conforme abaixo."
+type: software
+title: "Coletor de Jurisprudência do STF"
+abstract: "Ferramenta local para pesquisa, coleta e organização de documentos jurisprudenciais públicos do Supremo Tribunal Federal."
+authors:
+  - family-names: "Rebouças"
+    given-names: "Heitor Alves"
+version: "1.0.0"
+date-released: "2026-09-28"
+license: MIT
+repository-code: "https://github.com/HeitorReboucas/jurisprudencia-stf-downloader"
+keywords:
+  - jurisprudência
+  - Supremo Tribunal Federal
+  - coleta automatizada de dados
+  - pesquisa jurídica empírica
